@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState, useRef, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { LockIcon } from "lucide-react"
+import { LockIcon, UnlockIcon, MoonIcon, PaletteIcon, TypeIcon, RefreshCwIcon } from "lucide-react"
 
 export default function DesignSystem() {
   const [expandedItem, setExpandedItem] = useState<string | null>(null)
@@ -13,7 +13,6 @@ export default function DesignSystem() {
   const [scrollAmount, setScrollAmount] = useState<Record<string, number>>({})
   const containerRef = useRef<HTMLDivElement>(null)
   const itemRefs = useRef<Record<string, HTMLDivElement | null>>({})
-  const [isScrolling, setIsScrolling] = useState(false)
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Calculate which item is in the center of the viewport
@@ -48,7 +47,6 @@ export default function DesignSystem() {
     
     const handleScroll = () => {
       calculateCenterItem()
-      setIsScrolling(true)
       
       // Clear previous timeout
       if (scrollTimeoutRef.current) {
@@ -57,7 +55,7 @@ export default function DesignSystem() {
       
       // Set a new timeout
       scrollTimeoutRef.current = setTimeout(() => {
-        setIsScrolling(false)
+        calculateCenterItem()
       }, 150)
     }
     
@@ -156,37 +154,55 @@ export default function DesignSystem() {
       span: "col-span-1",
       content: (
         <div className="h-full flex items-center justify-center">
-          <svg width="150" height="150" viewBox="0 0 150 150">
-            <motion.line
-              x1="30"
-              y1="30"
-              x2="75"
-              y2="75"
-              stroke="white"
-              strokeWidth="2"
-              initial={{ pathLength: 0 }}
-              animate={{
-                pathLength: 0.6 + 0.4 * getExpansionScale("framework"),
+          {hoveredItem === "framework" ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ 
+                opacity: 1, 
+                scale: 1,
+                rotate: [0, 15, -15, 15, 0]
               }}
               transition={{ duration: 0.5 }}
-            />
-            <motion.line
-              x1="75"
-              y1="75"
-              x2="30"
-              y2="120"
-              stroke="white"
-              strokeWidth="2"
-              initial={{ pathLength: 0 }}
-              animate={{
-                pathLength: 0.6 + 0.4 * getExpansionScale("framework"),
-              }}
-              transition={{ duration: 0.5 }}
-            />
-            <motion.circle cx="30" cy="30" r="6" fill="white" />
-            <motion.circle cx="75" cy="75" r="6" fill="white" />
-            <motion.circle cx="30" cy="120" r="6" fill="white" />
-          </svg>
+              className="grid grid-cols-2 grid-rows-2 gap-3"
+            >
+              <div className="w-8 h-8 bg-white rounded-md"></div>
+              <div className="w-8 h-8 bg-white rounded-md"></div>
+              <div className="w-8 h-8 bg-white rounded-md"></div>
+              <div className="w-8 h-8 bg-white rounded-md"></div>
+            </motion.div>
+          ) : (
+            <svg width="150" height="150" viewBox="0 0 150 150">
+              <motion.line
+                x1="30"
+                y1="30"
+                x2="75"
+                y2="75"
+                stroke="white"
+                strokeWidth="2"
+                initial={{ pathLength: 0 }}
+                animate={{
+                  pathLength: 0.6 + 0.4 * getExpansionScale("framework"),
+                }}
+                transition={{ duration: 0.5 }}
+              />
+              <motion.line
+                x1="75"
+                y1="75"
+                x2="30"
+                y2="120"
+                stroke="white"
+                strokeWidth="2"
+                initial={{ pathLength: 0 }}
+                animate={{
+                  pathLength: 0.6 + 0.4 * getExpansionScale("framework"),
+                }}
+                transition={{ duration: 0.5 }}
+              />
+              <motion.circle cx="30" cy="30" r="6" fill="white" />
+              <motion.circle cx="75" cy="75" r="6" fill="white" />
+              <motion.circle cx="30" cy="120" r="6" fill="white" />
+            </svg>
+          )}
         </div>
       ),
       expandedContent: (
@@ -212,26 +228,53 @@ export default function DesignSystem() {
       span: "md:col-span-2",
       content: (
         <div className="flex justify-between items-center h-32">
-          <motion.span
-            className="text-[#5d4037] text-8xl"
-            animate={{
-              x: -20 * getExpansionScale("voice"),
-              scale: 1 + 0.2 * getExpansionScale("voice"),
-            }}
-            transition={{ type: "spring", stiffness: 300 }}
-          >
-            &ldquo;&ldquo;
-          </motion.span>
-          <motion.span
-            className="text-[#5d4037] text-8xl"
-            animate={{
-              x: 20 * getExpansionScale("voice"),
-              scale: 1 + 0.2 * getExpansionScale("voice"),
-            }}
-            transition={{ type: "spring", stiffness: 300 }}
-          >
-            &rdquo;&rdquo;
-          </motion.span>
+          {hoveredItem === "voice" ? (
+            <motion.div
+              className="flex flex-col items-center justify-center w-full space-y-2"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              <motion.div 
+                className="h-1 bg-white w-3/4 rounded-full"
+                animate={{ width: ["20%", "80%", "60%"] }}
+                transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY, repeatType: "loop" }}
+              />
+              <motion.div 
+                className="h-1 bg-white w-1/2 rounded-full"
+                animate={{ width: ["60%", "30%", "70%"] }}
+                transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY, repeatType: "loop", delay: 0.2 }}
+              />
+              <motion.div 
+                className="h-1 bg-white w-2/3 rounded-full"
+                animate={{ width: ["40%", "90%", "50%"] }}
+                transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY, repeatType: "loop", delay: 0.4 }}
+              />
+            </motion.div>
+          ) : (
+            <>
+              <motion.span
+                className="text-[#5d4037] text-8xl"
+                animate={{
+                  x: -20 * getExpansionScale("voice"),
+                  scale: 1 + 0.2 * getExpansionScale("voice"),
+                }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                &ldquo;&ldquo;
+              </motion.span>
+              <motion.span
+                className="text-[#5d4037] text-8xl"
+                animate={{
+                  x: 20 * getExpansionScale("voice"),
+                  scale: 1 + 0.2 * getExpansionScale("voice"),
+                }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                &rdquo;&rdquo;
+              </motion.span>
+            </>
+          )}
         </div>
       ),
       expandedContent: (
@@ -269,22 +312,57 @@ export default function DesignSystem() {
       span: "md:row-span-2",
       content: (
         <div className="flex justify-center items-center h-64">
-          <motion.svg
-            width="120"
-            height="120"
-            viewBox="0 0 120 120"
-            animate={{
-              rotate: 360 * getExpansionScale("logo"),
-              scale: 1 + 0.2 * getExpansionScale("logo"),
-            }}
-            transition={{ duration: 0.5 }}
-          >
-            <motion.rect x="20" y="20" width="30" height="30" fill="#0a3d62" />
-            <motion.rect x="70" y="20" width="30" height="30" fill="#0a3d62" />
-            <motion.rect x="45" y="45" width="30" height="30" fill="#0a3d62" />
-            <motion.rect x="20" y="70" width="30" height="30" fill="#0a3d62" />
-            <motion.rect x="70" y="70" width="30" height="30" fill="#0a3d62" />
-          </motion.svg>
+          {hoveredItem === "logo" ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="relative w-20 h-20"
+            >
+              <motion.div 
+                className="absolute inset-0 border-4 border-white rounded-full"
+                animate={{ 
+                  scale: [1, 1.2, 1],
+                  rotate: [0, 180, 360],
+                  borderRadius: ["50%", "25%", "50%"]
+                }}
+                transition={{ 
+                  duration: 2, 
+                  repeat: Number.POSITIVE_INFINITY,
+                  repeatType: "loop"
+                }}
+              />
+              <motion.div 
+                className="absolute inset-0 m-auto w-10 h-10 bg-white"
+                animate={{ 
+                  rotate: [0, 180, 360],
+                  borderRadius: ["0%", "50%", "0%"] 
+                }}
+                transition={{ 
+                  duration: 2, 
+                  repeat: Number.POSITIVE_INFINITY,
+                  repeatType: "loop",
+                  delay: 0.5
+                }}
+              />
+            </motion.div>
+          ) : (
+            <motion.svg
+              width="120"
+              height="120"
+              viewBox="0 0 120 120"
+              animate={{
+                rotate: 360 * getExpansionScale("logo"),
+                scale: 1 + 0.2 * getExpansionScale("logo"),
+              }}
+              transition={{ duration: 0.5 }}
+            >
+              <motion.rect x="20" y="20" width="30" height="30" fill="#0a3d62" />
+              <motion.rect x="70" y="20" width="30" height="30" fill="#0a3d62" />
+              <motion.rect x="45" y="45" width="30" height="30" fill="#0a3d62" />
+              <motion.rect x="20" y="70" width="30" height="30" fill="#0a3d62" />
+              <motion.rect x="70" y="70" width="30" height="30" fill="#0a3d62" />
+            </motion.svg>
+          )}
         </div>
       ),
       expandedContent: (
@@ -324,16 +402,26 @@ export default function DesignSystem() {
       span: "col-span-1",
       content: (
         <div className="flex justify-center items-center h-32">
-          <motion.span
-            className="text-[#5d0f0f] text-8xl font-serif"
-            animate={{
-              y: -20 * getExpansionScale("typography"),
-              scale: 1 + 0.2 * getExpansionScale("typography"),
-            }}
-            transition={{ type: "spring", stiffness: 300 }}
-          >
-            Aa
-          </motion.span>
+          {hoveredItem === "typography" ? (
+            <motion.div
+              initial={{ opacity: 0, rotate: -90 }}
+              animate={{ opacity: 1, rotate: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <TypeIcon size={64} className="text-white" />
+            </motion.div>
+          ) : (
+            <motion.span
+              className="text-[#5d0f0f] text-8xl font-serif"
+              animate={{
+                y: -20 * getExpansionScale("typography"),
+                scale: 1 + 0.2 * getExpansionScale("typography"),
+              }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
+              Aa
+            </motion.span>
+          )}
         </div>
       ),
       expandedContent: (
@@ -365,23 +453,35 @@ export default function DesignSystem() {
       span: "md:col-span-2 lg:col-span-1",
       content: (
         <div className="flex justify-center items-center h-32 relative">
-          <motion.div
-            className="absolute w-16 h-16 bg-[#6d3200] rounded"
-            animate={{
-              x: -40 * getExpansionScale("color"),
-              y: -20 * getExpansionScale("color"),
-              rotate: 45 * getExpansionScale("color"),
-            }}
-            transition={{ type: "spring", stiffness: 300 }}
-          />
-          <motion.div
-            className="absolute w-16 h-16 bg-[#6d3200] rounded-full"
-            animate={{
-              x: 40 * getExpansionScale("color"),
-              y: 20 * getExpansionScale("color"),
-            }}
-            transition={{ type: "spring", stiffness: 300 }}
-          />
+          {hoveredItem === "color" ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1, rotate: [0, 10, -10, 10, 0] }}
+              transition={{ duration: 0.6 }}
+            >
+              <PaletteIcon size={64} className="text-white" />
+            </motion.div>
+          ) : (
+            <>
+              <motion.div
+                className="absolute w-16 h-16 bg-[#6d3200] rounded"
+                animate={{
+                  x: -40 * getExpansionScale("color"),
+                  y: -20 * getExpansionScale("color"),
+                  rotate: 45 * getExpansionScale("color"),
+                }}
+                transition={{ type: "spring", stiffness: 300 }}
+              />
+              <motion.div
+                className="absolute w-16 h-16 bg-[#6d3200] rounded-full"
+                animate={{
+                  x: 40 * getExpansionScale("color"),
+                  y: 20 * getExpansionScale("color"),
+                }}
+                transition={{ type: "spring", stiffness: 300 }}
+              />
+            </>
+          )}
         </div>
       ),
       expandedContent: (
@@ -437,10 +537,19 @@ export default function DesignSystem() {
             animate={{
               scale: 1 + 0.5 * getExpansionScale("iconography"),
               y: -20 * getExpansionScale("iconography"),
+              rotate: hoveredItem === "iconography" ? 360 : 0,
             }}
-            transition={{ type: "spring", stiffness: 300 }}
+            transition={{ 
+              type: "spring", 
+              stiffness: 300,
+              rotate: { duration: 0.5 }
+            }}
           >
-            <LockIcon size={64} className="text-[#1e5631]" />
+            {hoveredItem === "iconography" ? (
+              <UnlockIcon size={64} className="text-white" />
+            ) : (
+              <LockIcon size={64} className="text-[#1e5631]" />
+            )}
           </motion.div>
         </div>
       ),
@@ -489,18 +598,28 @@ export default function DesignSystem() {
       textColor: "white",
       span: "md:col-span-2",
       content: (
-        <div className="flex justify-end items-center h-32">
-          <motion.div
-            className="w-32 h-32 bg-[#ffcccb] rounded-lg overflow-hidden relative"
-            animate={{
-              x: -20 * getExpansionScale("imagery"),
-              scale: 1 + 0.2 * getExpansionScale("imagery"),
-            }}
-            transition={{ type: "spring", stiffness: 300 }}
-          >
-            <motion.div className="absolute top-1/4 left-1/4 w-4 h-4 bg-[#e84393] rounded-full" />
-            <motion.div className="absolute bottom-0 left-0 right-0 h-1/2 bg-[#e84393] rounded-t-[50px]" />
-          </motion.div>
+        <div className="flex justify-center items-center h-32">
+          {hoveredItem === "imagery" ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              <MoonIcon size={80} className="text-white" />
+            </motion.div>
+          ) : (
+            <motion.div
+              className="w-32 h-32 bg-[#ffcccb] rounded-lg overflow-hidden relative"
+              animate={{
+                x: -20 * getExpansionScale("imagery"),
+                scale: 1 + 0.2 * getExpansionScale("imagery"),
+              }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
+              <motion.div className="absolute top-1/4 left-1/4 w-4 h-4 bg-[#e84393] rounded-full" />
+              <motion.div className="absolute bottom-0 left-0 right-0 h-1/2 bg-[#e84393] rounded-t-[50px]" />
+            </motion.div>
+          )}
         </div>
       ),
       expandedContent: (
@@ -540,60 +659,81 @@ export default function DesignSystem() {
       span: "col-span-1",
       content: (
         <div className="flex justify-center items-center h-64">
-          <svg width="150" height="150" viewBox="0 0 150 150">
-            <motion.path
-              d="M30,30 Q75,120 120,30 Q75,-60 30,30"
-              fill="transparent"
-              stroke="#4a148c"
-              strokeWidth="2"
-              initial={{ pathLength: 0 }}
-              animate={{
-                pathLength: 0.6 + 0.4 * getExpansionScale("motion"),
+          {hoveredItem === "motion" ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ 
+                opacity: 1, 
+                rotate: 360,
               }}
-              transition={{ duration: 0.5 }}
-            />
-            <motion.circle
-              cx="30"
-              cy="30"
-              r="8"
-              fill="#4a148c"
-              animate={{
-                scale: expandedItem === "motion" ? [1, 1.2, 1] : 1,
+              transition={{ 
+                duration: 1.5, 
+                repeat: Number.POSITIVE_INFINITY, 
+                repeatType: "loop",
+                ease: "linear"
               }}
-              transition={{
-                repeat: expandedItem === "motion" ? Number.POSITIVE_INFINITY : 0,
-                duration: 1,
-              }}
-            />
-            <motion.circle
-              cx="120"
-              cy="30"
-              r="8"
-              fill="#4a148c"
-              animate={{
-                scale: expandedItem === "motion" ? [1, 1.2, 1] : 1,
-              }}
-              transition={{
-                repeat: expandedItem === "motion" ? Number.POSITIVE_INFINITY : 0,
-                duration: 1,
-                delay: 0.5,
-              }}
-            />
-            <motion.circle
-              cx="75"
-              cy="120"
-              r="8"
-              fill="#4a148c"
-              animate={{
-                scale: expandedItem === "motion" ? [1, 1.2, 1] : 1,
-              }}
-              transition={{
-                repeat: expandedItem === "motion" ? Number.POSITIVE_INFINITY : 0,
-                duration: 1,
-                delay: 1,
-              }}
-            />
-          </svg>
+            >
+              <RefreshCwIcon size={80} className="text-white" />
+            </motion.div>
+          ) : (
+            <svg width="150" height="150" viewBox="0 0 150 150">
+              <motion.path
+                d="M30,30 Q75,120 120,30 Q75,-60 30,30"
+                fill="transparent"
+                stroke="#4a148c"
+                strokeWidth="2"
+                initial={{ pathLength: 0 }}
+                animate={{
+                  pathLength: 0.6 + 0.4 * getExpansionScale("motion"),
+                }}
+                transition={{ duration: 0.5 }}
+              />
+              <motion.circle
+                cx="30"
+                cy="30"
+                r="8"
+                fill="#4a148c"
+                animate={{
+                  scale: expandedItem === "motion" ? [1, 1.2, 1] : 1,
+                  y: expandedItem === "motion" ? [0, -10, 0] : 0,
+                }}
+                transition={{
+                  repeat: expandedItem === "motion" ? Number.POSITIVE_INFINITY : 0,
+                  duration: 1,
+                }}
+              />
+              <motion.circle
+                cx="120"
+                cy="30"
+                r="8"
+                fill="#4a148c"
+                animate={{
+                  scale: expandedItem === "motion" ? [1, 1.2, 1] : 1,
+                  y: expandedItem === "motion" ? [0, -10, 0] : 0,
+                }}
+                transition={{
+                  repeat: expandedItem === "motion" ? Number.POSITIVE_INFINITY : 0,
+                  duration: 1,
+                  delay: 0.5,
+                }}
+              />
+              <motion.circle
+                cx="75"
+                cy="120"
+                r="8"
+                fill="#4a148c"
+                animate={{
+                  scale: expandedItem === "motion" ? [1, 1.2, 1] : 1,
+                  y: expandedItem === "motion" ? [0, -10, 0] : 0,
+                }}
+                transition={{
+                  repeat: expandedItem === "motion" ? Number.POSITIVE_INFINITY : 0,
+                  duration: 1,
+                  delay: 1,
+                }}
+              />
+            </svg>
+          )}
         </div>
       ),
       expandedContent: (
@@ -633,13 +773,15 @@ export default function DesignSystem() {
         {items.map((item) => (
           <motion.div
             key={item.id}
-            ref={el => itemRefs.current[item.id] = el}
+            ref={(el: HTMLDivElement | null) => { itemRefs.current[item.id] = el }}
             className={`bg-[${item.bgColor}] text-[${item.textColor}] p-6 overflow-hidden relative rounded-xl shadow-lg ${item.span}`}
             animate={{
               height: expandedItem === item.id ? 500 : 300,
               opacity: getItemOpacity(item.id),
               scale: getItemSize(item.id),
               zIndex: getZIndex(item.id),
+              backgroundColor: hoveredItem === item.id ? '#000000' : item.bgColor,
+              color: hoveredItem === item.id ? '#ffffff' : item.textColor,
               boxShadow: hoveredItem === item.id || centerItem === item.id || expandedItem === item.id 
                 ? "0 10px 25px rgba(0,0,0,0.2)" 
                 : "0 4px 6px rgba(0,0,0,0.1)",
@@ -662,8 +804,8 @@ export default function DesignSystem() {
             onMouseEnter={() => setHoveredItem(item.id)}
             onMouseLeave={handleMouseLeave}
             style={{
-              backgroundColor: item.bgColor,
-              color: item.textColor,
+              backgroundColor: hoveredItem === item.id ? '#000000' : item.bgColor,
+              color: hoveredItem === item.id ? '#ffffff' : item.textColor,
             }}
           >
             <div className="flex justify-between items-center mb-4">
@@ -690,7 +832,7 @@ export default function DesignSystem() {
                   exit={{ y: 100, opacity: 0 }}
                   transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   style={{
-                    backgroundColor: item.bgColor,
+                    backgroundColor: hoveredItem === item.id ? '#000000' : item.bgColor,
                   }}
                 >
                   {item.expandedContent}
