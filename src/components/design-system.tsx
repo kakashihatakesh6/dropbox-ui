@@ -138,13 +138,15 @@ export default function DesignSystem() {
   const getItemSize = (item: string) => {
     if (expandedItem === item) return 1.1
     if (item === centerItem) {
-      // Make center item grow more substantially during scroll, but prevent shrinking
-      return 1 + ((centerItem && scrollAmount[centerItem]) || 0) / 100 * 0.5
+      // Make center item expand during expansion
+      return centerItem && typeof scrollAmount[centerItem] === 'number'
+        ? 1 + (scrollAmount[centerItem] / 100) * 0.5
+        : 1
     }
     if (item === hoveredItem && !scrollAmount[centerItem || '']) return 1.05
-    // Make other items shrink as center expands
+    // Make other items shrink more as center expands
     return item !== centerItem && centerItem && typeof scrollAmount[centerItem] === 'number'
-      ? Math.max(0.6, 1 - (scrollAmount[centerItem]) / 100 * 0.4)
+      ? Math.max(0.4, 1 - (scrollAmount[centerItem]) / 100 * 0.6)
       : 1
   }
 
@@ -769,6 +771,71 @@ export default function DesignSystem() {
         </>
       ),
     },
+    {
+      id: "accessibility",
+      title: "Accessibility",
+      bgColor: "#20bf6b",
+      textColor: "white",
+      content: (
+        <div className="flex justify-center items-center h-full">
+          {hoveredItem === "accessibility" ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 8v8" />
+                <path d="M8 12h8" />
+              </svg>
+            </motion.div>
+          ) : (
+            <motion.div
+              className="relative w-32 h-32 flex items-center justify-center"
+              animate={{
+                scale: 1 + 0.2 * getExpansionScale("accessibility"),
+              }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
+              <div className="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center">
+                <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center">
+                  <div className="w-6 h-6 rounded-full bg-[#20bf6b]"></div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </div>
+      ),
+      expandedContent: (
+        <>
+          <h3 className="text-xl font-semibold mb-2">Inclusive Design</h3>
+          <p className="mb-4">
+            Design principles and practices that ensure our products are accessible to users of all abilities.
+          </p>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <h4 className="font-medium">Accessibility Standards:</h4>
+              <ul className="list-disc pl-5">
+                <li>WCAG 2.1 AA compliance</li>
+                <li>Keyboard navigation support</li>
+                <li>Screen reader compatibility</li>
+                <li>Sufficient color contrast</li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-medium">Design Considerations:</h4>
+              <ul className="list-disc pl-5">
+                <li>Text resizing without loss of functionality</li>
+                <li>Alternative text for images</li>
+                <li>Focus indicators for interactive elements</li>
+                <li>Multiple ways to access content</li>
+              </ul>
+            </div>
+          </div>
+        </>
+      ),
+    },
   ]
 
   return (
@@ -889,9 +956,7 @@ export default function DesignSystem() {
       <div 
         className={`grid grid-cols-3 grid-rows-3 h-full w-full max-h-screen max-w-screen p-8 relative`}
         style={{
-          gap: centerItem && typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] > 0
-            ? `${20 + scrollAmount[centerItem] * 0.6}px` // Increased gap multiplier for more spacing
-            : '1.25rem',
+          gap: '1.25rem', // Fixed gap size that doesn't change during expansion
           zIndex: 5 // Above the grid lines
         }}
       >
@@ -923,6 +988,9 @@ export default function DesignSystem() {
             case "motion":
               gridPosition = "col-start-2 col-end-3 row-start-3 row-end-4";
               break;
+            case "accessibility": // New bottom-right item
+              gridPosition = "col-start-3 col-end-4 row-start-3 row-end-4";
+              break;
             default:
               gridPosition = "col-start-3 col-end-4 row-start-3 row-end-4";
           }
@@ -933,9 +1001,7 @@ export default function DesignSystem() {
                 if (item.id === centerItem) return { x: 0, y: 0 };
                 
                 // Use exponential factor to make boxes move faster as they get further
-                // Add minimum distance to ensure boxes start moving immediately and maintain gaps
-                const baseDistance = 50; // Minimum distance to maintain gap
-                const moveOutFactor = baseDistance + Math.pow(scrollAmount[centerItem] / 100, 1.2) * 250;
+                const moveOutFactor = Math.pow(scrollAmount[centerItem] / 100, 1.1) * 220;
                 
                 // Explicitly use the id as a string to avoid TypeScript errors
                 const id = item.id;
@@ -971,8 +1037,8 @@ export default function DesignSystem() {
                 x: positionOffset.x,
                 y: positionOffset.y,
                 zIndex: getZIndex(item.id),
-                backgroundColor: hoveredItem === item.id ? '#000000' : item.bgColor,
-                color: hoveredItem === item.id ? '#ffffff' : item.textColor,
+                backgroundColor: hoveredItem === item.id && item.id !== centerItem ? '#000000' : item.bgColor,
+                color: hoveredItem === item.id && item.id !== centerItem ? '#ffffff' : item.textColor,
                 // Add blur effect to non-center boxes during expansion
                 filter: item.id !== centerItem && centerItem && typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] > 50 
                   ? `blur(${(scrollAmount[centerItem] - 50) / 50 * 2}px)` 
@@ -994,11 +1060,12 @@ export default function DesignSystem() {
                 }),
                 // Apply intermediate expansion states for center item during scroll
                 ...(item.id === centerItem && !expandedItem && centerItem && 
-                   typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] > 0 && {
-                  width: `calc(100% + ${scrollAmount[centerItem] * 3}px)`, // Reduced multiplier to prevent overlap
-                  height: `calc(100% + ${scrollAmount[centerItem] * 3}px)`, // Reduced multiplier to prevent overlap
-                  margin: `-${scrollAmount[centerItem] * 1.5}px`, // Maintain proportional margin
-                  zIndex: 25
+                  typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] > 0 && {
+                  position: "relative",
+                  zIndex: 25,
+                  width: `calc(100% + ${scrollAmount[centerItem] * 0.5}px)`,
+                  height: `calc(100% + ${scrollAmount[centerItem] * 0.5}px)`,
+                  margin: `-${scrollAmount[centerItem] * 0.25}px`,
                 }),
               }}
               transition={{
@@ -1013,8 +1080,8 @@ export default function DesignSystem() {
               onMouseEnter={() => setHoveredItem(item.id)}
               onMouseLeave={handleMouseLeave}
               style={{
-                backgroundColor: hoveredItem === item.id ? '#000000' : item.bgColor,
-                color: hoveredItem === item.id ? '#ffffff' : item.textColor,
+                backgroundColor: hoveredItem === item.id && item.id !== centerItem ? '#000000' : item.bgColor,
+                color: hoveredItem === item.id && item.id !== centerItem ? '#ffffff' : item.textColor,
               }}
             >
               <div className="flex justify-between items-center mb-2">
@@ -1032,10 +1099,27 @@ export default function DesignSystem() {
                 )}
               </div>
               
-              {/* Only animate content in the center box or when not scrolling */}
-              {(item.id === centerItem || !centerItem || typeof scrollAmount[centerItem] !== 'number' || scrollAmount[centerItem] === 0) 
-                ? item.content 
-                : <div className="h-full flex items-center justify-center opacity-80">{item.content}</div>
+              {/* Don't animate center box content during expansion */}
+              {(item.id === centerItem) 
+                ? (
+                  <div className="h-full flex items-center justify-center">
+                    <svg
+                      width="120"
+                      height="120"
+                      viewBox="0 0 120 120"
+                    >
+                      <rect x="20" y="20" width="30" height="30" fill="#0a3d62" />
+                      <rect x="70" y="20" width="30" height="30" fill="#0a3d62" />
+                      <rect x="45" y="45" width="30" height="30" fill="#0a3d62" />
+                      <rect x="20" y="70" width="30" height="30" fill="#0a3d62" />
+                      <rect x="70" y="70" width="30" height="30" fill="#0a3d62" />
+                    </svg>
+                  </div>
+                )
+                : ((!centerItem || typeof scrollAmount[centerItem] !== 'number' || scrollAmount[centerItem] === 0) 
+                  ? item.content 
+                  : <div className="h-full flex items-center justify-center opacity-80">{item.content}</div>
+                )
               }
               
               <AnimatePresence>
