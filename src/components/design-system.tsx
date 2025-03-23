@@ -115,8 +115,8 @@ export default function DesignSystem() {
   const getItemSize = (item: string) => {
     if (expandedItem === item) return 1.1
     if (item === centerItem) {
-      // Make center item grow more substantially during scroll
-      return 1 + ((centerItem && scrollAmount[centerItem]) || 0) / 100 * 0.3
+      // Make center item grow more substantially during scroll, but prevent shrinking
+      return 1 + ((centerItem && scrollAmount[centerItem]) || 0) / 100 * 0.5
     }
     if (item === hoveredItem && !scrollAmount[centerItem || '']) return 1.05
     // Make other items shrink as center expands
@@ -750,7 +750,96 @@ export default function DesignSystem() {
 
   return (
     <div className="w-full h-screen bg-gray-50 flex items-center justify-center overflow-hidden" ref={containerRef}>
-      <div className="grid grid-cols-3 grid-rows-3 gap-4 h-full w-full max-h-screen max-w-screen p-8">
+      {/* Add decorative background lines that animate during expansion */}
+      {centerItem && scrollAmount[centerItem] && scrollAmount[centerItem] > 0 && (
+        <motion.div 
+          className="absolute inset-0 w-full h-full pointer-events-none z-0"
+          initial={{ opacity: 0 }}
+          animate={{ 
+            opacity: scrollAmount[centerItem] / 100 * 0.3
+          }}
+        >
+          <svg width="100%" height="100%" className="absolute inset-0">
+            <motion.pattern 
+              id="grid" 
+              width="40" 
+              height="40" 
+              patternUnits="userSpaceOnUse"
+              initial={{ scale: 0.5 }}
+              animate={{ 
+                scale: 1 + scrollAmount[centerItem] / 100 * 0.5
+              }}
+            >
+              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(0,0,0,0.1)" strokeWidth="1" />
+            </motion.pattern>
+            <rect width="100%" height="100%" fill="url(#grid)" />
+          </svg>
+        </motion.div>
+      )}
+
+      {/* Add connecting lines between boxes during expansion */}
+      {centerItem && scrollAmount[centerItem] && scrollAmount[centerItem] > 20 && (
+        <svg 
+          className="absolute inset-0 w-full h-full pointer-events-none z-20"
+          style={{ 
+            opacity: Math.min(0.3, scrollAmount[centerItem] / 100 * 0.4)
+          }}
+        >
+          {items.map((item) => {
+            if (item.id === centerItem || !itemRefs.current[item.id] || !itemRefs.current[centerItem || '']) return null;
+            
+            // Get center box position
+            const centerBox = itemRefs.current[centerItem || '']?.getBoundingClientRect();
+            const currBox = itemRefs.current[item.id]?.getBoundingClientRect();
+            
+            if (!centerBox || !currBox) return null;
+            
+            // Calculate line coordinates
+            const centerX = centerBox.left + centerBox.width / 2;
+            const centerY = centerBox.top + centerBox.height / 2;
+            const currX = currBox.left + currBox.width / 2;
+            const currY = currBox.top + currBox.height / 2;
+            
+            // Determine line style based on box position
+            let strokeColor;
+            switch(item.id) {
+              case "framework": strokeColor = "#2c3e50"; break;
+              case "voice": strokeColor = "#f1c40f"; break;
+              case "typography": strokeColor = "#ff7f50"; break;
+              case "color": strokeColor = "#ff9f43"; break;
+              case "iconography": strokeColor = "#b8e994"; break;
+              case "imagery": strokeColor = "#8e44ad"; break;
+              case "motion": strokeColor = "#d8b5ff"; break;
+              default: strokeColor = "#888888"; break;
+            }
+            
+            const lineDashLength = Math.sqrt(
+              Math.pow(centerX - currX, 2) + Math.pow(centerY - currY, 2)
+            );
+            
+            const dashProgress = Math.min(1, scrollAmount[centerItem] / 100 * 1.5);
+            
+            return (
+              <motion.line
+                key={`line-${item.id}`}
+                x1={centerX}
+                y1={centerY}
+                x2={currX}
+                y2={currY}
+                stroke={strokeColor}
+                strokeWidth="1"
+                strokeDasharray={lineDashLength}
+                strokeDashoffset={lineDashLength * (1 - dashProgress)}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+              />
+            );
+          })}
+        </svg>
+      )}
+
+      <div className="grid grid-cols-3 grid-rows-3 gap-4 h-full w-full max-h-screen max-w-screen p-8 relative z-10">
         {items.map((item) => {
           // Set grid positions to create a 3x3 grid with logo in center
           let gridPosition = "";
@@ -788,7 +877,8 @@ export default function DesignSystem() {
             ? (() => {
                 if (item.id === centerItem) return { x: 0, y: 0 };
                 
-                const moveOutFactor = scrollAmount[centerItem] / 100 * 100;
+                // Use exponential factor to make boxes move faster as they get further
+                const moveOutFactor = Math.pow(scrollAmount[centerItem] / 100, 1.5) * 200;
                 
                 // Explicitly use the id as a string to avoid TypeScript errors
                 const id = item.id;
@@ -796,17 +886,17 @@ export default function DesignSystem() {
                   case "framework": // top-left
                     return { x: -moveOutFactor, y: -moveOutFactor };
                   case "voice": // top-center
-                    return { x: 0, y: -moveOutFactor };
+                    return { x: 0, y: -moveOutFactor * 1.2 };
                   case "typography": // top-right
                     return { x: moveOutFactor, y: -moveOutFactor };
                   case "color": // middle-left
-                    return { x: -moveOutFactor, y: 0 };
+                    return { x: -moveOutFactor * 1.2, y: 0 };
                   case "iconography": // middle-right
-                    return { x: moveOutFactor, y: 0 };
+                    return { x: moveOutFactor * 1.2, y: 0 };
                   case "imagery": // bottom-left
                     return { x: -moveOutFactor, y: moveOutFactor };
                   case "motion": // bottom-center
-                    return { x: 0, y: moveOutFactor };
+                    return { x: 0, y: moveOutFactor * 1.2 };
                   default: // bottom-right
                     return { x: moveOutFactor, y: moveOutFactor };
                 }
@@ -826,6 +916,10 @@ export default function DesignSystem() {
                 zIndex: getZIndex(item.id),
                 backgroundColor: hoveredItem === item.id ? '#000000' : item.bgColor,
                 color: hoveredItem === item.id ? '#ffffff' : item.textColor,
+                // Add blur effect to non-center boxes during expansion
+                filter: item.id !== centerItem && centerItem && typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] > 50 
+                  ? `blur(${(scrollAmount[centerItem] - 50) / 50 * 2}px)` 
+                  : "blur(0px)",
                 boxShadow: hoveredItem === item.id || centerItem === item.id || expandedItem === item.id 
                   ? "0 10px 25px rgba(0,0,0,0.2)" 
                   : "0 4px 6px rgba(0,0,0,0.1)",
@@ -844,17 +938,17 @@ export default function DesignSystem() {
                 // Apply intermediate expansion states for center item during scroll
                 ...(item.id === centerItem && !expandedItem && centerItem && 
                    typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] > 0 && {
-                  width: `calc(100% + ${scrollAmount[centerItem] * 2}px)`,
-                  height: `calc(100% + ${scrollAmount[centerItem] * 2}px)`,
-                  margin: `-${scrollAmount[centerItem]}px`,
+                  width: `calc(100% + ${scrollAmount[centerItem] * 4}px)`, // Increased from 3 to 4 for more expansion
+                  height: `calc(100% + ${scrollAmount[centerItem] * 4}px)`, // Increased from 3 to 4 for more expansion
+                  margin: `-${scrollAmount[centerItem] * 2}px`, // Increased from 1.5 to 2 for more margin
                   zIndex: 25
                 }),
               }}
               transition={{
                 type: "spring",
-                stiffness: 200,
-                damping: 25,
-                layout: { duration: 0.3 },
+                stiffness: 350,
+                damping: 30,
+                layout: { duration: 0.3, ease: "easeOut" },
               }}
               layout
               onWheel={item.id === centerItem ? (e) => handleWheel(e, item.id) : undefined}
@@ -899,7 +993,17 @@ export default function DesignSystem() {
                       backgroundColor: hoveredItem === item.id ? '#000000' : item.bgColor,
                     }}
                   >
-                    <div className="max-w-4xl mx-auto my-8">
+                    {/* Add decorative lines in the expanded view */}
+                    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                      <svg width="100%" height="100%" className="opacity-10">
+                        <pattern id="expandedGrid" width="60" height="60" patternUnits="userSpaceOnUse">
+                          <path d="M 60 0 L 0 0 0 60" fill="none" stroke="currentColor" strokeWidth="1" />
+                        </pattern>
+                        <rect width="100%" height="100%" fill="url(#expandedGrid)" />
+                      </svg>
+                    </div>
+                    
+                    <div className="max-w-4xl mx-auto my-8 relative z-10">
                       <div className="flex justify-between items-center mb-8">
                         <h1 className="text-3xl font-bold">{item.title}</h1>
                         <motion.button
