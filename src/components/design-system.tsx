@@ -9,7 +9,7 @@ import { LockIcon, UnlockIcon, MoonIcon, PaletteIcon, TypeIcon, RefreshCwIcon } 
 export default function DesignSystem() {
   const [expandedItem, setExpandedItem] = useState<string | null>(null)
   const [hoveredItem, setHoveredItem] = useState<string | null>(null)
-  const [centerItem, setCenterItem] = useState<string | null>(null)
+  const [centerItem, setCenterItem] = useState<string | null>("logo")  // Default center item
   const [scrollAmount, setScrollAmount] = useState<Record<string, number>>({})
   const containerRef = useRef<HTMLDivElement>(null)
   const itemRefs = useRef<Record<string, HTMLDivElement | null>>({})
@@ -19,44 +19,18 @@ export default function DesignSystem() {
   useEffect(() => {
     const calculateCenterItem = () => {
       if (!containerRef.current) return
-
-      const containerRect = containerRef.current.getBoundingClientRect()
-      const containerCenter = containerRect.top + containerRect.height / 2
-      
-      let closestItem = null
-      let closestDistance = Infinity
-
-      // Find the item closest to the center
-      Object.entries(itemRefs.current).forEach(([itemId, element]) => {
-        if (!element) return
-        
-        const rect = element.getBoundingClientRect()
-        const itemCenter = rect.top + rect.height / 2
-        const distance = Math.abs(containerCenter - itemCenter)
-        
-        if (distance < closestDistance) {
-          closestDistance = distance
-          closestItem = itemId
-        }
-      })
-
-      setCenterItem(closestItem)
+      setCenterItem("logo") // Force logo to be the center item
     }
 
     calculateCenterItem()
     
     const handleScroll = () => {
-      calculateCenterItem()
+      // Keep logo as center item, but track scroll for expansion
       
       // Clear previous timeout
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current)
       }
-      
-      // Set a new timeout
-      scrollTimeoutRef.current = setTimeout(() => {
-        calculateCenterItem()
-      }, 150)
     }
     
     window.addEventListener('scroll', handleScroll)
@@ -80,9 +54,10 @@ export default function DesignSystem() {
     // Update scroll amount for this item
     setScrollAmount((prev) => {
       const currentAmount = prev[item] || 0
-      const newAmount = Math.max(0, Math.min(100, currentAmount + (e.deltaY > 0 ? 5 : -5)))
+      // Make scrolling more gradual for smoother expansion
+      const newAmount = Math.max(0, Math.min(100, currentAmount + (e.deltaY > 0 ? 2.5 : -2.5)))
 
-      // If scroll reaches threshold, expand the item
+      // Only expand fully when we reach the threshold
       if (newAmount >= 100 && expandedItem !== item) {
         setExpandedItem(item)
       } else if (newAmount <= 0 && expandedItem === item) {
@@ -117,23 +92,37 @@ export default function DesignSystem() {
   // Get expansion scale for an item (0-1)
   const getExpansionScale = (item: string) => {
     if (expandedItem === item) return 1
-    if (item === centerItem) return (scrollAmount[item] || 0) / 100
-    if (item === hoveredItem) return 0.5 // Partial animation on hover
+    if (item === centerItem) {
+      // Center item expansion is now handled by the more complex animation in the JSX
+      return ((centerItem && scrollAmount[centerItem]) || 0) / 100
+    }
+    if (item === hoveredItem && !scrollAmount[centerItem || '']) return 0.5 // Only show hover animation when not scrolling
     return 0
   }
 
   // Get opacity for items
   const getItemOpacity = (item: string) => {
-    if (expandedItem && expandedItem !== item) return 0.5
+    // When an item is fully expanded, make other items completely invisible
+    if (expandedItem && expandedItem !== item) return 0
+    // Fade out other items as center expands
+    if (item !== centerItem && centerItem && typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] > 0) {
+      return Math.max(0.2, 1 - scrollAmount[centerItem] / 100 * 0.8)
+    }
     return 1
   }
 
   // Get size for an item based on hover/center/expanded state
   const getItemSize = (item: string) => {
     if (expandedItem === item) return 1.1
-    if (item === centerItem) return 1 + (scrollAmount[centerItem] || 0) / 100 * 0.1
-    if (item === hoveredItem) return 1.05
-    return 1
+    if (item === centerItem) {
+      // Make center item grow more substantially during scroll
+      return 1 + ((centerItem && scrollAmount[centerItem]) || 0) / 100 * 0.3
+    }
+    if (item === hoveredItem && !scrollAmount[centerItem || '']) return 1.05
+    // Make other items shrink as center expands
+    return item !== centerItem && centerItem && typeof scrollAmount[centerItem] === 'number'
+      ? Math.max(0.6, 1 - (scrollAmount[centerItem]) / 100 * 0.4)
+      : 1
   }
 
   // Get z-index for proper layering
@@ -151,7 +140,6 @@ export default function DesignSystem() {
       title: "Framework",
       bgColor: "#2c3e50",
       textColor: "white",
-      span: "col-span-1",
       content: (
         <div className="h-full flex items-center justify-center">
           {hoveredItem === "framework" ? (
@@ -225,9 +213,8 @@ export default function DesignSystem() {
       title: "Voice & Tone",
       bgColor: "#f1c40f",
       textColor: "#5d4037",
-      span: "md:col-span-2",
       content: (
-        <div className="flex justify-between items-center h-32">
+        <div className="flex justify-between items-center h-full">
           {hoveredItem === "voice" ? (
             <motion.div
               className="flex flex-col items-center justify-center w-full space-y-2"
@@ -309,9 +296,8 @@ export default function DesignSystem() {
       title: "Logo",
       bgColor: "#48dbfb",
       textColor: "#0a3d62",
-      span: "md:row-span-2",
       content: (
-        <div className="flex justify-center items-center h-64">
+        <div className="flex justify-center items-center h-full">
           {hoveredItem === "logo" ? (
             <motion.div
               initial={{ opacity: 0 }}
@@ -399,9 +385,8 @@ export default function DesignSystem() {
       title: "Typography",
       bgColor: "#ff7f50",
       textColor: "#5d0f0f",
-      span: "col-span-1",
       content: (
-        <div className="flex justify-center items-center h-32">
+        <div className="flex justify-center items-center h-full">
           {hoveredItem === "typography" ? (
             <motion.div
               initial={{ opacity: 0, rotate: -90 }}
@@ -450,9 +435,8 @@ export default function DesignSystem() {
       title: "Color",
       bgColor: "#ff9f43",
       textColor: "#6d3200",
-      span: "md:col-span-2 lg:col-span-1",
       content: (
-        <div className="flex justify-center items-center h-32 relative">
+        <div className="flex justify-center items-center h-full relative">
           {hoveredItem === "color" ? (
             <motion.div
               initial={{ opacity: 0, scale: 0.5 }}
@@ -530,9 +514,8 @@ export default function DesignSystem() {
       title: "Iconography",
       bgColor: "#b8e994",
       textColor: "#1e5631",
-      span: "col-span-1",
       content: (
-        <div className="flex justify-center items-center h-32">
+        <div className="flex justify-center items-center h-full">
           <motion.div
             animate={{
               scale: 1 + 0.5 * getExpansionScale("iconography"),
@@ -596,9 +579,8 @@ export default function DesignSystem() {
       title: "Imagery",
       bgColor: "#8e44ad",
       textColor: "white",
-      span: "md:col-span-2",
       content: (
-        <div className="flex justify-center items-center h-32">
+        <div className="flex justify-center items-center h-full">
           {hoveredItem === "imagery" ? (
             <motion.div
               initial={{ opacity: 0, scale: 0.5 }}
@@ -656,9 +638,8 @@ export default function DesignSystem() {
       title: "Motion",
       bgColor: "#d8b5ff",
       textColor: "#4a148c",
-      span: "col-span-1",
       content: (
-        <div className="flex justify-center items-center h-64">
+        <div className="flex justify-center items-center h-full">
           {hoveredItem === "motion" ? (
             <motion.div
               initial={{ opacity: 0 }}
@@ -768,90 +749,182 @@ export default function DesignSystem() {
   ]
 
   return (
-    <div className="w-full min-h-screen bg-gray-50 py-8 px-4" ref={containerRef}>
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-7xl mx-auto">
-        {items.map((item) => (
-          <motion.div
-            key={item.id}
-            ref={(el: HTMLDivElement | null) => { itemRefs.current[item.id] = el }}
-            className={`bg-[${item.bgColor}] text-[${item.textColor}] p-6 overflow-hidden relative rounded-xl shadow-lg ${item.span}`}
-            animate={{
-              height: expandedItem === item.id ? 500 : 300,
-              opacity: getItemOpacity(item.id),
-              scale: getItemSize(item.id),
-              zIndex: getZIndex(item.id),
-              backgroundColor: hoveredItem === item.id ? '#000000' : item.bgColor,
-              color: hoveredItem === item.id ? '#ffffff' : item.textColor,
-              boxShadow: hoveredItem === item.id || centerItem === item.id || expandedItem === item.id 
-                ? "0 10px 25px rgba(0,0,0,0.2)" 
-                : "0 4px 6px rgba(0,0,0,0.1)",
-              // When fully expanded, make it take more space
-              ...(expandedItem === item.id && {
-                gridColumn: "1 / -1", // Span all columns
-                height: 600,
-              }),
-            }}
-            transition={{
-              type: "spring",
-              stiffness: 300,
-              damping: 30,
-              // Make layout transitions smoother
-              layout: { duration: 0.5 },
-            }}
-            layout
-            onWheel={(e) => handleWheel(e, item.id)}
-            onClick={() => handleClick(item.id)}
-            onMouseEnter={() => setHoveredItem(item.id)}
-            onMouseLeave={handleMouseLeave}
-            style={{
-              backgroundColor: hoveredItem === item.id ? '#000000' : item.bgColor,
-              color: hoveredItem === item.id ? '#ffffff' : item.textColor,
-            }}
-          >
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-3xl font-bold">{item.title}</h2>
-              {centerItem === item.id && !expandedItem && (
-                <motion.div 
-                  className="text-xs font-semibold px-2 py-1 rounded-full bg-white bg-opacity-20"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                >
-                  Scroll to expand
-                </motion.div>
-              )}
-            </div>
-            
-            {item.content}
-            
-            <AnimatePresence>
-              {expandedItem === item.id && (
-                <motion.div
-                  className="absolute bottom-0 left-0 right-0 p-8 bg-opacity-95 rounded-b-xl backdrop-blur-sm"
-                  initial={{ y: 100, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  exit={{ y: 100, opacity: 0 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                  style={{
-                    backgroundColor: hoveredItem === item.id ? '#000000' : item.bgColor,
-                  }}
-                >
-                  {item.expandedContent}
-                  <motion.button
-                    className="mt-4 px-4 py-2 bg-white bg-opacity-20 rounded-lg text-sm font-medium hover:bg-opacity-30 transition-colors"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setExpandedItem(null);
+    <div className="w-full h-screen bg-gray-50 flex items-center justify-center overflow-hidden" ref={containerRef}>
+      <div className="grid grid-cols-3 grid-rows-3 gap-4 h-full w-full max-h-screen max-w-screen p-8">
+        {items.map((item) => {
+          // Set grid positions to create a 3x3 grid with logo in center
+          let gridPosition = "";
+          switch(item.id) {
+            case "framework":
+              gridPosition = "col-start-1 col-end-2 row-start-1 row-end-2";
+              break;
+            case "voice":
+              gridPosition = "col-start-2 col-end-3 row-start-1 row-end-2";
+              break;
+            case "logo": // Center item
+              gridPosition = "col-start-2 col-end-3 row-start-2 row-end-3";
+              break;
+            case "typography":
+              gridPosition = "col-start-3 col-end-4 row-start-1 row-end-2";
+              break;
+            case "color":
+              gridPosition = "col-start-1 col-end-2 row-start-2 row-end-3";
+              break;
+            case "iconography":
+              gridPosition = "col-start-3 col-end-4 row-start-2 row-end-3";
+              break;
+            case "imagery":
+              gridPosition = "col-start-1 col-end-2 row-start-3 row-end-4";
+              break;
+            case "motion":
+              gridPosition = "col-start-2 col-end-3 row-start-3 row-end-4";
+              break;
+            default:
+              gridPosition = "col-start-3 col-end-4 row-start-3 row-end-4";
+          }
+
+          // Calculate position offset for moving items away from center
+          const positionOffset = centerItem && typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] > 0 
+            ? (() => {
+                if (item.id === centerItem) return { x: 0, y: 0 };
+                
+                const moveOutFactor = scrollAmount[centerItem] / 100 * 100;
+                
+                // Explicitly use the id as a string to avoid TypeScript errors
+                const id = item.id;
+                switch(id) {
+                  case "framework": // top-left
+                    return { x: -moveOutFactor, y: -moveOutFactor };
+                  case "voice": // top-center
+                    return { x: 0, y: -moveOutFactor };
+                  case "typography": // top-right
+                    return { x: moveOutFactor, y: -moveOutFactor };
+                  case "color": // middle-left
+                    return { x: -moveOutFactor, y: 0 };
+                  case "iconography": // middle-right
+                    return { x: moveOutFactor, y: 0 };
+                  case "imagery": // bottom-left
+                    return { x: -moveOutFactor, y: moveOutFactor };
+                  case "motion": // bottom-center
+                    return { x: 0, y: moveOutFactor };
+                  default: // bottom-right
+                    return { x: moveOutFactor, y: moveOutFactor };
+                }
+              })()
+            : { x: 0, y: 0 };
+          
+          return (
+            <motion.div
+              key={item.id}
+              ref={(el: HTMLDivElement | null) => { itemRefs.current[item.id] = el }}
+              className={`bg-[${item.bgColor}] text-[${item.textColor}] p-4 overflow-hidden relative rounded-xl shadow-lg ${gridPosition} transition-colors`}
+              animate={{
+                opacity: getItemOpacity(item.id),
+                scale: getItemSize(item.id),
+                x: positionOffset.x,
+                y: positionOffset.y,
+                zIndex: getZIndex(item.id),
+                backgroundColor: hoveredItem === item.id ? '#000000' : item.bgColor,
+                color: hoveredItem === item.id ? '#ffffff' : item.textColor,
+                boxShadow: hoveredItem === item.id || centerItem === item.id || expandedItem === item.id 
+                  ? "0 10px 25px rgba(0,0,0,0.2)" 
+                  : "0 4px 6px rgba(0,0,0,0.1)",
+                // When fully expanded, make it take more space
+                ...(expandedItem === item.id && {
+                  position: "fixed",
+                  top: 0,
+                  left: 0,
+                  x: 0,
+                  y: 0,
+                  width: "100vw",
+                  height: "100vh",
+                  borderRadius: 0,
+                  zIndex: 50
+                }),
+                // Apply intermediate expansion states for center item during scroll
+                ...(item.id === centerItem && !expandedItem && centerItem && 
+                   typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] > 0 && {
+                  width: `calc(100% + ${scrollAmount[centerItem] * 2}px)`,
+                  height: `calc(100% + ${scrollAmount[centerItem] * 2}px)`,
+                  margin: `-${scrollAmount[centerItem]}px`,
+                  zIndex: 25
+                }),
+              }}
+              transition={{
+                type: "spring",
+                stiffness: 200,
+                damping: 25,
+                layout: { duration: 0.3 },
+              }}
+              layout
+              onWheel={item.id === centerItem ? (e) => handleWheel(e, item.id) : undefined}
+              onClick={() => handleClick(item.id)}
+              onMouseEnter={() => setHoveredItem(item.id)}
+              onMouseLeave={handleMouseLeave}
+              style={{
+                backgroundColor: hoveredItem === item.id ? '#000000' : item.bgColor,
+                color: hoveredItem === item.id ? '#ffffff' : item.textColor,
+              }}
+            >
+              <div className="flex justify-between items-center mb-2">
+                <h2 className="text-xl font-bold">{item.title}</h2>
+                {item.id === centerItem && !expandedItem && centerItem && (
+                  <motion.div 
+                    className="text-xs font-semibold px-2 py-1 rounded-full bg-white bg-opacity-20"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                  >
+                    {typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] > 0 
+                      ? `${Math.round(scrollAmount[centerItem])}%` 
+                      : "Scroll to expand"}
+                  </motion.div>
+                )}
+              </div>
+              
+              {/* Only animate content in the center box or when not scrolling */}
+              {(item.id === centerItem || !centerItem || typeof scrollAmount[centerItem] !== 'number' || scrollAmount[centerItem] === 0) 
+                ? item.content 
+                : <div className="h-full flex items-center justify-center opacity-80">{item.content}</div>
+              }
+              
+              <AnimatePresence>
+                {expandedItem === item.id && (
+                  <motion.div
+                    className="absolute inset-0 p-8 bg-opacity-100 overflow-auto"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    style={{
+                      backgroundColor: hoveredItem === item.id ? '#000000' : item.bgColor,
                     }}
                   >
-                    Close
-                  </motion.button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
-        ))}
+                    <div className="max-w-4xl mx-auto my-8">
+                      <div className="flex justify-between items-center mb-8">
+                        <h1 className="text-3xl font-bold">{item.title}</h1>
+                        <motion.button
+                          className="px-4 py-2 bg-white bg-opacity-20 rounded-lg text-sm font-medium hover:bg-opacity-30 transition-colors"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setExpandedItem(null);
+                          }}
+                        >
+                          Close
+                        </motion.button>
+                      </div>
+                      
+                      <div className="prose prose-lg">
+                        {item.expandedContent}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          )
+        })}
       </div>
     </div>
   )
