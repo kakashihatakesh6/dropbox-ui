@@ -46,27 +46,28 @@ export default function DesignSystem() {
   }, [])
 
   // Track scroll amount for the center item only
-  const handleWheel = (e: React.WheelEvent, item: string) => {
-    if (item !== centerItem) return
+  const handleWheel = (e: React.WheelEvent) => {
+    // Allow scrolling anywhere in the container
+    if (!centerItem) return
     
     e.preventDefault() // Prevent default scroll behavior
 
-    // Update scroll amount for this item
+    // Update scroll amount for the center item
     setScrollAmount((prev) => {
-      const currentAmount = prev[item] || 0
+      const currentAmount = prev[centerItem] || 0
       // Make scrolling more gradual for smoother expansion
       const newAmount = Math.max(0, Math.min(100, currentAmount + (e.deltaY > 0 ? 2.5 : -2.5)))
 
       // Only expand fully when we reach the threshold
-      if (newAmount >= 100 && expandedItem !== item) {
-        setExpandedItem(item)
-      } else if (newAmount <= 0 && expandedItem === item) {
+      if (newAmount >= 100 && expandedItem !== centerItem) {
+        setExpandedItem(centerItem)
+      } else if (newAmount <= 0 && expandedItem === centerItem) {
         setExpandedItem(null)
       }
 
       return {
         ...prev,
-        [item]: newAmount,
+        [centerItem]: newAmount,
       }
     })
   }
@@ -144,7 +145,7 @@ export default function DesignSystem() {
         );
         
         // Fade out as distance increases and scroll amount increases
-        return Math.max(0, 1 - distance * scrollAmount[centerItem] / 70);
+        return Math.max(0, 1 - distance * scrollAmount[centerItem] / 50);
       }
       return Math.max(0.2, 1 - scrollAmount[centerItem] / 100 * 0.8)
     }
@@ -854,7 +855,11 @@ export default function DesignSystem() {
   ]
 
   return (
-    <div className="w-full h-screen bg-white flex items-center justify-center overflow-hidden" ref={containerRef}>
+    <div 
+      className="w-full h-screen bg-white flex items-center justify-center overflow-hidden" 
+      ref={containerRef}
+      onWheel={handleWheel} // Add wheel event handler to the container
+    >
       {/* Grid lines that ONLY appear during expansion */}
       {centerItem && scrollAmount[centerItem] && scrollAmount[centerItem] > 0 && (
         <div className="fixed inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
@@ -1070,8 +1075,8 @@ export default function DesignSystem() {
                 x: positionOffset.x,
                 y: positionOffset.y,
                 zIndex: getZIndex(item.id),
-                backgroundColor: hoveredItem === item.id && item.id !== centerItem ? '#000000' : item.bgColor,
-                color: hoveredItem === item.id && item.id !== centerItem ? '#ffffff' : item.textColor,
+                backgroundColor: item.bgColor, // Keep original background color
+                color: item.textColor, // Keep original text color 
                 // Add blur effect to non-center boxes during expansion
                 filter: item.id !== centerItem && centerItem && typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] > 50 
                   ? `blur(${(scrollAmount[centerItem] - 50) / 50 * 2}px)` 
@@ -1108,13 +1113,13 @@ export default function DesignSystem() {
                 layout: { duration: 0.3, ease: "easeOut" },
               }}
               layout
-              onWheel={item.id === centerItem ? (e) => handleWheel(e, item.id) : undefined}
+              onWheel={item.id === centerItem ? (e) => handleWheel(e) : undefined}
               onClick={() => handleClick(item.id)}
               onMouseEnter={() => setHoveredItem(item.id)}
               onMouseLeave={handleMouseLeave}
               style={{
-                backgroundColor: hoveredItem === item.id && item.id !== centerItem ? '#000000' : item.bgColor,
-                color: hoveredItem === item.id && item.id !== centerItem ? '#ffffff' : item.textColor,
+                backgroundColor: item.bgColor,
+                color: item.textColor,
               }}
             >
               <div className="flex justify-between items-center mb-2">
@@ -1164,27 +1169,27 @@ export default function DesignSystem() {
                     exit={{ opacity: 0 }}
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
                     style={{
-                      backgroundColor: hoveredItem === item.id ? '#000000' : item.bgColor,
+                      backgroundColor: item.bgColor, // Keep original background color
                     }}
                   >
                     {/* Add decorative lines in the expanded view - light blue */}
                     <div className="absolute inset-0 overflow-hidden pointer-events-none">
                       <svg width="100%" height="100%" className="opacity-50">
                         <pattern id="expandedGrid" width="40" height="40" patternUnits="userSpaceOnUse">
-                          <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(65,182,255,0.5)" strokeWidth="1" />
+                          <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(65,182,255,0.3)" strokeWidth="1" />
                         </pattern>
                         <rect width="100%" height="100%" fill="url(#expandedGrid)" />
                         
                         <pattern id="expandedLargeGrid" width="120" height="120" patternUnits="userSpaceOnUse">
-                          <path d="M 120 0 L 0 0 0 120" fill="none" stroke="rgba(65,182,255,0.6)" strokeWidth="1.5" />
+                          <path d="M 120 0 L 0 0 0 120" fill="none" stroke="rgba(65,182,255,0.4)" strokeWidth="1.5" />
                         </pattern>
                         <rect width="100%" height="100%" fill="url(#expandedLargeGrid)" />
                       </svg>
                     </div>
                     
-                    <div className="max-w-4xl mx-auto my-8 relative z-10">
-                      <div className="flex justify-between items-center mb-8">
-                        <h1 className="text-3xl font-bold">{item.title}</h1>
+                    <div className="max-w-6xl mx-auto relative z-10">
+                      <div className="flex justify-between items-center mb-8 pt-6">
+                        <h1 className="text-4xl font-bold">{item.title}</h1>
                         <motion.button
                           className="px-4 py-2 bg-white bg-opacity-20 rounded-lg text-sm font-medium hover:bg-opacity-30 transition-colors"
                           whileHover={{ scale: 1.05 }}
@@ -1198,8 +1203,140 @@ export default function DesignSystem() {
                         </motion.button>
                       </div>
                       
-                      <div className="prose prose-lg">
-                        {item.expandedContent}
+                      <div className="grid grid-cols-1 md:grid-cols-12 gap-8 pb-16">
+                        {/* Enhanced expandedContent with sections */}
+                        <div className="md:col-span-8 space-y-8">
+                          <section className="bg-white bg-opacity-10 backdrop-blur-sm p-8 rounded-2xl shadow-lg">
+                            <h2 className="text-2xl font-medium mb-6 flex items-center">
+                              <span className="bg-white bg-opacity-20 p-2 rounded-lg mr-3">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <circle cx="12" cy="12" r="10"></circle>
+                                  <line x1="12" y1="8" x2="12" y2="16"></line>
+                                  <line x1="8" y1="12" x2="16" y2="12"></line>
+                                </svg>
+                              </span>
+                              Overview
+                            </h2>
+                            <div className="prose prose-lg">
+                              {item.expandedContent}
+                            </div>
+                          </section>
+                          
+                          <section className="bg-white bg-opacity-10 backdrop-blur-sm p-8 rounded-2xl shadow-lg">
+                            <h2 className="text-2xl font-medium mb-6 flex items-center">
+                              <span className="bg-white bg-opacity-20 p-2 rounded-lg mr-3">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                                  <path d="M3 9h18"></path>
+                                  <path d="M9 21V9"></path>
+                                </svg>
+                              </span>
+                              Best Practices
+                            </h2>
+                            <div className="space-y-4">
+                              <div className="flex items-start">
+                                <div className="bg-white bg-opacity-20 p-2 rounded-full mr-4 mt-1">
+                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                  </svg>
+                                </div>
+                                <div>
+                                  <h3 className="font-medium text-lg">Consistency is Key</h3>
+                                  <p>Maintain consistency across all touchpoints to build a coherent experience.</p>
+                                </div>
+                              </div>
+                              <div className="flex items-start">
+                                <div className="bg-white bg-opacity-20 p-2 rounded-full mr-4 mt-1">
+                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                  </svg>
+                                </div>
+                                <div>
+                                  <h3 className="font-medium text-lg">Less is More</h3>
+                                  <p>Focus on simplicity and clarity rather than complexity and clutter.</p>
+                                </div>
+                              </div>
+                              <div className="flex items-start">
+                                <div className="bg-white bg-opacity-20 p-2 rounded-full mr-4 mt-1">
+                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                  </svg>
+                                </div>
+                                <div>
+                                  <h3 className="font-medium text-lg">Test and Iterate</h3>
+                                  <p>Regularly test with users and refine based on their feedback.</p>
+                                </div>
+                              </div>
+                            </div>
+                          </section>
+                        </div>
+                        
+                        <div className="md:col-span-4 space-y-8">
+                          <section className="bg-white bg-opacity-10 backdrop-blur-sm p-8 rounded-2xl shadow-lg">
+                            <h2 className="text-2xl font-medium mb-6 flex items-center">
+                              <span className="bg-white bg-opacity-20 p-2 rounded-lg mr-3">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                                  <polyline points="14 2 14 8 20 8"></polyline>
+                                </svg>
+                              </span>
+                              Resources
+                            </h2>
+                            <ul className="space-y-3">
+                              <li>
+                                <a href="#" className="flex items-center p-3 bg-white bg-opacity-10 rounded-lg hover:bg-opacity-20 transition-colors">
+                                  <span className="bg-white bg-opacity-20 p-2 rounded-lg mr-3">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                                      <polyline points="13 2 13 9 20 9"></polyline>
+                                    </svg>
+                                  </span>
+                                  <span>Documentation</span>
+                                </a>
+                              </li>
+                              <li>
+                                <a href="#" className="flex items-center p-3 bg-white bg-opacity-10 rounded-lg hover:bg-opacity-20 transition-colors">
+                                  <span className="bg-white bg-opacity-20 p-2 rounded-lg mr-3">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
+                                      <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
+                                      <path d="M2 2l7.586 7.586"></path>
+                                      <circle cx="11" cy="11" r="2"></circle>
+                                    </svg>
+                                  </span>
+                                  <span>Sketch Files</span>
+                                </a>
+                              </li>
+                              <li>
+                                <a href="#" className="flex items-center p-3 bg-white bg-opacity-10 rounded-lg hover:bg-opacity-20 transition-colors">
+                                  <span className="bg-white bg-opacity-20 p-2 rounded-lg mr-3">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                    </svg>
+                                  </span>
+                                  <span>Examples</span>
+                                </a>
+                              </li>
+                            </ul>
+                          </section>
+                          
+                          <section className="bg-white bg-opacity-10 backdrop-blur-sm p-8 rounded-2xl shadow-lg">
+                            <h2 className="text-2xl font-medium mb-6 flex items-center">
+                              <span className="bg-white bg-opacity-20 p-2 rounded-lg mr-3">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <circle cx="12" cy="12" r="10"></circle>
+                                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                                </svg>
+                              </span>
+                              Need Help?
+                            </h2>
+                            <p className="mb-4">Have questions about implementing this in your project?</p>
+                            <button className="w-full py-3 bg-white bg-opacity-20 rounded-lg hover:bg-opacity-30 transition-colors">
+                              Contact Support
+                            </button>
+                          </section>
+                        </div>
                       </div>
                     </div>
                   </motion.div>
