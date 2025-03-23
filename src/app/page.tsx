@@ -23,8 +23,8 @@ export default function Home() {
       
       setScrollProgress(progress)
       
-      // Set transition complete flag when we reach 95% of the scroll progress
-      setTransitionComplete(progress > 0.95)
+      // Set transition complete flag when we reach 90% of the scroll progress
+      setTransitionComplete(progress > 0.9)
     }
 
     window.addEventListener('scroll', handleScroll)
@@ -38,8 +38,8 @@ export default function Home() {
 
   // Calculate the position and size for the dropbox container as it transforms into a logo box
   const getTransformStyles = () => {
-    // Start with normal positioning
-    let transform = `scale(${1 - scrollProgress * 0.2})`
+    // Start with normal positioning - more aggressive initial scaling
+    let transform = `scale(${1 - scrollProgress * 0.3})`
     const opacity = dropboxVisibility
     
     // When we're above 50% scroll, start the transition to center
@@ -47,18 +47,18 @@ export default function Home() {
       // Calculate how far into the transition we are (0 to 1)
       const transitionProgress = (scrollProgress - 0.5) * 2
       
-      // Calculate position to move toward center
+      // Calculate position to move toward center - ensure it centers properly
       transform = `
-        scale(${Math.max(0.5, 1 - scrollProgress * 0.5)})
-        translate(${transitionProgress * 50}%, ${transitionProgress * 50}%)
+        scale(${Math.max(0.4, 1 - scrollProgress * 0.6)})
+        translate(${transitionProgress * 50}%, ${transitionProgress * 45}%)
       `
       
       // Shrink to logo box size as we approach completion
       if (scrollProgress > 0.8) {
         const finalShrink = (scrollProgress - 0.8) * 5 // 0 to 1 in the final 20%
         transform = `
-          scale(${Math.max(0.3, 0.5 - finalShrink * 0.2)})
-          translate(${50}%, ${50}%)
+          scale(${Math.max(0.15, 0.35 - finalShrink * 0.2)})
+          translate(${50}%, ${45}%)
         `
       }
     }
@@ -70,11 +70,12 @@ export default function Home() {
   }
 
   return (
+    // Drop Box Interface
     <div className="min-h-screen w-full relative">
       {/* Dropbox content - shrinks and fades out on scroll */}
       <div 
         ref={mainContentRef}
-        className={`fixed inset-0 w-full z-10 transition-all duration-300 
+        className={`fixed inset-0 w-full z-20 transition-all duration-500 ease-in-out
           ${transitionComplete ? 'pointer-events-none' : ''}`}
         style={getTransformStyles()}
       >
@@ -105,6 +106,10 @@ export default function Home() {
                 <div 
                   className="w-10 h-10"
                   ref={logoBoxRef}
+                  style={{
+                    transform: scrollProgress > 0.8 ? 'scale(0.8)' : 'scale(1)',
+                    transition: 'transform 0.3s ease-in-out'
+                  }}
                 >
                   <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid">
                     <path d="M63.246 0L0 41.625l43.766 35.22 64.764-39.812-45.284-37.033zm129.728 0L147.69 37.033l64.762 39.812 43.768-35.22L193.735 0h-.761zm-129.728 115.6L0 74.336l43.766-35.033 64.764 39.626-45.284 36.672zm129.728 0L147.69 73.93l64.762-39.626 43.768 35.032-63.52 41.264zm-65.202 42.627l-45.046-36.848-45.285 36.848 45.285 37.22 45.046-37.22z" fill="#0061FF" />
@@ -127,20 +132,20 @@ export default function Home() {
       {/* Design System - grows and fades in on scroll */}
       <div
         ref={designSystemRef}
-        className="fixed inset-0 w-full z-0 transition-all duration-300"
+        className="fixed inset-0 w-full z-10 transition-all duration-500 ease-in-out"
         style={{
           opacity: designSystemVisibility,
           transform: `scale(${designSystemScale})`,
-          pointerEvents: designSystemVisibility > 0.5 ? 'auto' : 'none',
+          pointerEvents: designSystemVisibility > 0.4 ? 'auto' : 'none',
         }}
       >
-        <DesignSystem initialCenterItem={transitionComplete ? "logo" : null} />
+        <DesignSystem initialCenterItem="logo" />
       </div>
 
       {/* Scroll indicator */}
       <div 
         className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-30 flex flex-col items-center transition-opacity duration-300"
-        style={{ opacity: scrollProgress > 0.8 ? 0 : 1 }}
+        style={{ opacity: scrollProgress > 0.7 ? 0 : 1 }}
       >
         <p className="text-xs text-gray-500 mb-2 bg-white/80 px-2 py-1 rounded-full backdrop-blur-sm">
           Scroll to explore design system

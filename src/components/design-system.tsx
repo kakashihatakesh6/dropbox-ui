@@ -18,6 +18,7 @@ export default function DesignSystem({ initialCenterItem }: DesignSystemProps = 
   const containerRef = useRef<HTMLDivElement>(null)
   const itemRefs = useRef<Record<string, HTMLDivElement | null>>({})
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const [isExpanding, setIsExpanding] = useState(false)
 
   // Update centerItem when initialCenterItem changes
   useEffect(() => {
@@ -59,25 +60,49 @@ export default function DesignSystem({ initialCenterItem }: DesignSystemProps = 
     }
   }, [initialCenterItem])
 
-  // Track scroll amount for the center item only
+  // Track scroll amount for the center item only with improved stability
   const handleWheel = (e: React.WheelEvent) => {
-    // Allow scrolling anywhere in the container
-    if (!centerItem) return
+    if (!centerItem || expandedItem) return
     
     e.preventDefault() // Prevent default scroll behavior
 
-    // Update scroll amount for the center item
+    // Update scroll amount for the center item with more stable increments
     setScrollAmount((prev) => {
       const currentAmount = prev[centerItem] || 0
-      // Make scrolling more gradual for smoother expansion
-      const newAmount = Math.max(0, Math.min(100, currentAmount + (e.deltaY > 0 ? 2.5 : -2.5)))
+      // Use smaller increment for smoother expansion
+      const increment = 1.5
+      const newAmount = Math.max(0, Math.min(100, currentAmount + (e.deltaY > 0 ? increment : -increment)))
 
-      // Only expand fully when we reach the threshold
-      if (newAmount >= 100 && expandedItem !== centerItem) {
-        setExpandedItem(centerItem)
-      } else if (newAmount <= 0 && expandedItem === centerItem) {
-        setExpandedItem(null)
+      // Only set expanding state when we reach threshold values
+      if (newAmount >= 95 && !isExpanding) {
+        setIsExpanding(true)
+        setTimeout(() => {
+          setExpandedItem(centerItem)
+          setIsExpanding(false)
+        }, 200)
+      } else if (newAmount <= 5 && isExpanding) {
+        setIsExpanding(false)
       }
+
+      // Store the last scroll position to maintain state
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current)
+      }
+      
+      // Set a timeout to snap to thresholds for stability
+      scrollTimeoutRef.current = setTimeout(() => {
+        if (newAmount > 85) {
+          setScrollAmount(prev => ({
+            ...prev,
+            [centerItem]: 100
+          }))
+        } else if (newAmount < 15) {
+          setScrollAmount(prev => ({
+            ...prev,
+            [centerItem]: 0
+          }))
+        }
+      }, 200)
 
       return {
         ...prev,
@@ -86,39 +111,28 @@ export default function DesignSystem({ initialCenterItem }: DesignSystemProps = 
     })
   }
 
-  // Handle click to toggle expanded state
+  // Handle click to toggle expanded state with improved stability
   const handleClick = (item: string) => {
+    if (isExpanding) return // Prevent clicks during expansion
+
     if (expandedItem === item) {
       // Smooth retraction animation
-      // First set scroll amount to 100 to ensure we have a smooth animation
+      setScrollAmount(prev => ({
+        ...prev,
+        [item]: 0
+      }))
+      
+      setTimeout(() => {
+        setExpandedItem(null)
+      }, 300)
+    } else {
+      // Set scroll amount to 100 for clean expansion
       setScrollAmount(prev => ({
         ...prev,
         [item]: 100
       }))
       
-      // Then gradually reduce it to 0 with animation
-      const startTime = Date.now();
-      const duration = 800; // milliseconds for the closing animation
-      
-      const animateClose = () => {
-        const elapsed = Date.now() - startTime;
-        const progress = Math.max(0, 1 - (elapsed / duration));
-        
-        setScrollAmount(prev => ({
-          ...prev,
-          [item]: Math.round(progress * 100)
-        }));
-        
-        if (progress > 0) {
-          requestAnimationFrame(animateClose);
-        } else {
-          setExpandedItem(null);
-        }
-      };
-      
-      requestAnimationFrame(animateClose);
-    } else {
-      setExpandedItem(item);
+      setExpandedItem(item)
     }
   }
 
@@ -127,55 +141,47 @@ export default function DesignSystem({ initialCenterItem }: DesignSystemProps = 
     setHoveredItem(null)
   }
 
-  // Get expansion scale for an item (0-1)
+  // Get expansion scale for an item (0-1) with improved stability
   const getExpansionScale = (item: string) => {
     if (expandedItem === item) return 1
     if (item === centerItem) {
-      // Center item expansion is now handled by the more complex animation in the JSX
+      // Simplify center item expansion calculation
       return ((centerItem && scrollAmount[centerItem]) || 0) / 100
     }
-    if (item === hoveredItem && !scrollAmount[centerItem || '']) return 0.5 // Only show hover animation when not scrolling
+    if (item === hoveredItem && 
+        (!centerItem || !scrollAmount[centerItem] || scrollAmount[centerItem] === 0)) {
+      return 0.5 // Only show hover animation when not scrolling
+    }
     return 0
   }
 
-  // Get opacity for items
+  // Get opacity for items with improved stability
   const getItemOpacity = (item: string) => {
     // When an item is fully expanded, make other items completely invisible
     if (expandedItem && expandedItem !== item) return 0
-    // Fade out other items as they move toward viewport edges
-    if (item !== centerItem && centerItem && typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] > 0) {
-      const box = itemRefs.current[item]?.getBoundingClientRect();
-      if (box) {
-        // Calculate distance from center of viewport
-        const viewportCenterX = window.innerWidth / 2;
-        const viewportCenterY = window.innerHeight / 2;
-        const boxCenterX = box.left + box.width / 2;
-        const boxCenterY = box.top + box.height / 2;
-        
-        // Calculate normalized distance from center (0-1)
-        const distance = Math.sqrt(
-          Math.pow((boxCenterX - viewportCenterX) / (window.innerWidth / 2), 2) +
-          Math.pow((boxCenterY - viewportCenterY) / (window.innerHeight / 2), 2)
-        );
-        
-        // Fade out as distance increases and scroll amount increases
-        return Math.max(0, 1 - distance * scrollAmount[centerItem] / 50);
-      }
-      return Math.max(0.2, 1 - scrollAmount[centerItem] / 100 * 0.8)
+    
+    // Fade out non-center items during expansion
+    if (item !== centerItem && centerItem && 
+        typeof scrollAmount[centerItem] === 'number' && 
+        scrollAmount[centerItem] > 0) {
+      // Simple linear fade based on scroll amount
+      return Math.max(0.2, 1 - (scrollAmount[centerItem] / 100) * 0.8)
     }
+    
     return 1
   }
 
-  // Get size for an item based on hover/center/expanded state
+  // Get size for an item based on hover/center/expanded state with improved stability
   const getItemSize = (item: string) => {
     if (expandedItem === item) return 1.1
     if (item === centerItem) {
-      // Make center item expand during expansion
-      return centerItem && typeof scrollAmount[centerItem] === 'number'
-        ? 1 + (scrollAmount[centerItem] / 100) * 0.7
-        : 1
+      // Simplified growth logic
+      return 1 + ((scrollAmount[centerItem] || 0) / 100) * 0.2
     }
-    if (item === hoveredItem && !scrollAmount[centerItem || '']) return 1.05
+    if (item === hoveredItem && 
+        (!centerItem || !scrollAmount[centerItem] || scrollAmount[centerItem] === 0)) {
+      return 1.05
+    }
     // Keep other items at their original size
     return 1
   }
@@ -357,52 +363,39 @@ export default function DesignSystem({ initialCenterItem }: DesignSystemProps = 
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="relative w-20 h-20"
+              className="relative w-14 h-14"
             >
-              <motion.div 
-                className="absolute inset-0 border-4 border-white rounded-full"
-                animate={{ 
-                  scale: [1, 1.2, 1],
-                  rotate: [0, 180, 360],
-                  borderRadius: ["50%", "25%", "50%"]
-                }}
-                transition={{ 
-                  duration: 2, 
-                  repeat: Number.POSITIVE_INFINITY,
-                  repeatType: "loop"
-                }}
-              />
-              <motion.div 
-                className="absolute inset-0 m-auto w-10 h-10 bg-white"
-                animate={{ 
-                  rotate: [0, 180, 360],
-                  borderRadius: ["0%", "50%", "0%"] 
-                }}
-                transition={{ 
-                  duration: 2, 
-                  repeat: Number.POSITIVE_INFINITY,
-                  repeatType: "loop",
-                  delay: 0.5
-                }}
-              />
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                viewBox="0 0 24 24" 
+                fill="#0a3d62" 
+                className="w-full h-full"
+              >
+                <path d="M12 2l5.5 5.5-5.5 5.5-5.5-5.5 5.5-5.5zM5.5 14.5l5.5 5.5 5.5-5.5-5.5-5.5-5.5 5.5z"/>
+              </svg>
             </motion.div>
           ) : (
-            <motion.svg
-              width="120"
-              height="120"
-              viewBox="0 0 120 120"
+            <motion.div
+              className="w-12 h-12 flex items-center justify-center"
               animate={{
-                rotate: 360 * getExpansionScale("logo"),
-                scale: 1 + 0.2 * getExpansionScale("logo"),
+                scale: 1 + 0.05 * getExpansionScale("logo"),
               }}
-              transition={{ duration: 0.5 }}
+              transition={{ 
+                type: "spring",
+                stiffness: 400,
+                damping: 30,
+                duration: 0.2
+              }}
             >
-              <motion.rect x="20" y="20" width="30" height="30" fill="#0a3d62" />
-              <motion.rect x="70" y="20" width="30" height="30" fill="#0a3d62" />
-              <motion.rect x="45" y="45" width="30" height="30" fill="#0a3d62" />
-              <motion.rect x="20" y="70" width="30" height="30" fill="#0a3d62" />
-              <motion.rect x="70" y="70" width="30" height="30" fill="#0a3d62" />
-            </motion.svg>
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                viewBox="0 0 24 24" 
+                fill="#0a3d62" 
+                className="w-full h-full"
+              >
+                <path d="M12 2l5.5 5.5-5.5 5.5-5.5-5.5 5.5-5.5zM5.5 14.5l5.5 5.5 5.5-5.5-5.5-5.5-5.5 5.5z"/>
+              </svg>
+            </motion.div>
           )}
         </div>
       ),
@@ -1091,43 +1084,54 @@ export default function DesignSystem({ initialCenterItem }: DesignSystemProps = 
                 zIndex: getZIndex(item.id),
                 backgroundColor: item.bgColor, // Keep original background color
                 color: item.textColor, // Keep original text color 
-                // Add blur effect to non-center boxes during expansion
-                filter: item.id !== centerItem && centerItem && typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] > 50 
-                  ? `blur(${(scrollAmount[centerItem] - 50) / 50 * 2}px)` 
+                // Simplified blur effect
+                filter: item.id !== centerItem && centerItem && 
+                       typeof scrollAmount[centerItem] === 'number' && 
+                       scrollAmount[centerItem] > 70 
+                  ? `blur(${(scrollAmount[centerItem] - 70) / 30}px)` 
                   : "blur(0px)",
                 boxShadow: hoveredItem === item.id || centerItem === item.id || expandedItem === item.id 
                   ? "0 10px 25px rgba(0,0,0,0.2)" 
                   : "0 4px 6px rgba(0,0,0,0.1)",
-                // When fully expanded, make it take more space
+                // Fixed expanded state properties
                 ...(expandedItem === item.id && {
                   position: "fixed",
                   top: 0,
                   left: 0,
-                  x: 0,
-                  y: 0,
+                  right: 0,
+                  bottom: 0,
                   width: "100vw",
                   height: "100vh",
+                  x: 0,
+                  y: 0,
                   borderRadius: 0,
                   zIndex: 50
                 }),
-                // Apply intermediate expansion states for center item during scroll
+                // Simplified intermediate expansion for center item
                 ...(item.id === centerItem && !expandedItem && centerItem && 
                   typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] > 0 && {
                   position: "relative",
                   zIndex: 25,
-                  width: `calc(100% + ${scrollAmount[centerItem] * 0.8}px)`,
-                  height: `calc(100% + ${scrollAmount[centerItem] * 0.8}px)`,
-                  margin: `-${scrollAmount[centerItem] * 0.4}px`,
+                  scale: 1 + (scrollAmount[centerItem] / 100) * 0.2,
                 }),
               }}
               transition={{
                 type: "spring",
-                stiffness: 350,
-                damping: 30,
-                layout: { duration: 0.3, ease: "easeOut" },
+                stiffness: 300,
+                damping: 25,
+                // Make expanded/contracted state more stable with slower transitions
+                ...(expandedItem === item.id || (expandedItem !== null && expandedItem !== item.id) 
+                  ? { duration: 0.4 }
+                  : {}
+                ),
               }}
-              layout
-              onWheel={item.id === centerItem ? (e) => handleWheel(e) : undefined}
+              layout="preserve-aspect"
+              onWheel={(e) => {
+                // Only handle wheel events on center item or container
+                if (item.id === centerItem && !expandedItem) {
+                  handleWheel(e)
+                }
+              }}
               onClick={() => handleClick(item.id)}
               onMouseEnter={() => setHoveredItem(item.id)}
               onMouseLeave={handleMouseLeave}
@@ -1155,17 +1159,41 @@ export default function DesignSystem({ initialCenterItem }: DesignSystemProps = 
               {(item.id === centerItem) 
                 ? (
                   <div className="h-full flex items-center justify-center">
-                    <svg
-                      width="120"
-                      height="120"
-                      viewBox="0 0 120 120"
-                    >
-                      <rect x="20" y="20" width="30" height="30" fill="#0a3d62" />
-                      <rect x="70" y="20" width="30" height="30" fill="#0a3d62" />
-                      <rect x="45" y="45" width="30" height="30" fill="#0a3d62" />
-                      <rect x="20" y="70" width="30" height="30" fill="#0a3d62" />
-                      <rect x="70" y="70" width="30" height="30" fill="#0a3d62" />
-                    </svg>
+                    {item.id === "logo" ? (
+                      <motion.div
+                        className="w-12 h-12 flex items-center justify-center"
+                        animate={{
+                          scale: 1,
+                        }}
+                        transition={{ 
+                          type: "spring",
+                          stiffness: 400,
+                          damping: 30,
+                          duration: 0.2
+                        }}
+                      >
+                        <svg 
+                          xmlns="http://www.w3.org/2000/svg" 
+                          viewBox="0 0 24 24" 
+                          fill="#0a3d62" 
+                          className="w-full h-full"
+                        >
+                          <path d="M12 2l5.5 5.5-5.5 5.5-5.5-5.5 5.5-5.5zM5.5 14.5l5.5 5.5 5.5-5.5-5.5-5.5-5.5 5.5z"/>
+                        </svg>
+                      </motion.div>
+                    ) : (
+                      <svg
+                        width="120"
+                        height="120"
+                        viewBox="0 0 120 120"
+                      >
+                        <rect x="20" y="20" width="30" height="30" fill="#0a3d62" />
+                        <rect x="70" y="20" width="30" height="30" fill="#0a3d62" />
+                        <rect x="45" y="45" width="30" height="30" fill="#0a3d62" />
+                        <rect x="20" y="70" width="30" height="30" fill="#0a3d62" />
+                        <rect x="70" y="70" width="30" height="30" fill="#0a3d62" />
+                      </svg>
+                    )}
                   </div>
                 )
                 : ((!centerItem || typeof scrollAmount[centerItem] !== 'number' || scrollAmount[centerItem] === 0) 
