@@ -73,14 +73,37 @@ export default function DesignSystem() {
 
   // Handle click to toggle expanded state
   const handleClick = (item: string) => {
-    setExpandedItem(expandedItem === item ? null : item)
-    
-    // Reset scroll amount when closing
     if (expandedItem === item) {
+      // Smooth retraction animation
+      // First set scroll amount to 100 to ensure we have a smooth animation
       setScrollAmount(prev => ({
         ...prev,
-        [item]: 0
+        [item]: 100
       }))
+      
+      // Then gradually reduce it to 0 with animation
+      const startTime = Date.now();
+      const duration = 800; // milliseconds for the closing animation
+      
+      const animateClose = () => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.max(0, 1 - (elapsed / duration));
+        
+        setScrollAmount(prev => ({
+          ...prev,
+          [item]: Math.round(progress * 100)
+        }));
+        
+        if (progress > 0) {
+          requestAnimationFrame(animateClose);
+        } else {
+          setExpandedItem(null);
+        }
+      };
+      
+      requestAnimationFrame(animateClose);
+    } else {
+      setExpandedItem(item);
     }
   }
 
@@ -749,42 +772,66 @@ export default function DesignSystem() {
   ]
 
   return (
-    <div className="w-full h-screen bg-gray-50 flex items-center justify-center overflow-hidden" ref={containerRef}>
-      {/* Add decorative background lines that animate during expansion */}
+    <div className="w-full h-screen bg-white flex items-center justify-center overflow-hidden" ref={containerRef}>
+      {/* Grid lines that ONLY appear during expansion */}
       {centerItem && scrollAmount[centerItem] && scrollAmount[centerItem] > 0 && (
-        <motion.div 
-          className="absolute inset-0 w-full h-full pointer-events-none z-0"
-          initial={{ opacity: 0 }}
-          animate={{ 
-            opacity: scrollAmount[centerItem] / 100 * 0.3
-          }}
-        >
+        <div className="fixed inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
           <svg width="100%" height="100%" className="absolute inset-0">
-            <motion.pattern 
-              id="grid" 
-              width="40" 
-              height="40" 
-              patternUnits="userSpaceOnUse"
-              initial={{ scale: 0.5 }}
-              animate={{ 
-                scale: 1 + scrollAmount[centerItem] / 100 * 0.5
-              }}
-            >
-              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(0,0,0,0.1)" strokeWidth="1" />
-            </motion.pattern>
-            <rect width="100%" height="100%" fill="url(#grid)" />
+            {/* Small grid pattern */}
+            <pattern id="smallGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="none" />
+              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(65,182,255,0.4)" strokeWidth="0.8" />
+            </pattern>
+            <rect width="100vw" height="100vh" fill="url(#smallGrid)" />
+            
+            {/* Medium grid pattern */}
+            <pattern id="mediumGrid" width="60" height="60" patternUnits="userSpaceOnUse">
+              <rect width="60" height="60" fill="none" />
+              <path d="M 60 0 L 0 0 0 60" fill="none" stroke="rgba(65,182,255,0.5)" strokeWidth="1" />
+            </pattern>
+            <rect width="100vw" height="100vh" fill="url(#mediumGrid)" />
+            
+            {/* Large grid pattern */}
+            <pattern id="largeGrid" width="120" height="120" patternUnits="userSpaceOnUse">
+              <rect width="120" height="120" fill="none" />
+              <path d="M 120 0 L 0 0 0 120" fill="none" stroke="rgba(65,182,255,0.6)" strokeWidth="1.2" />
+            </pattern>
+            <rect width="100vw" height="100vh" fill="url(#largeGrid)" />
           </svg>
-        </motion.div>
+        </div>
       )}
 
-      {/* Add connecting lines between boxes during expansion */}
-      {centerItem && scrollAmount[centerItem] && scrollAmount[centerItem] > 20 && (
-        <svg 
-          className="absolute inset-0 w-full h-full pointer-events-none z-20"
+      {/* Additional grid decorators that ONLY appear during expansion */}
+      {centerItem && scrollAmount[centerItem] && scrollAmount[centerItem] > 0 && (
+        <div 
+          className="fixed inset-0 w-full h-full pointer-events-none"
           style={{ 
-            opacity: Math.min(0.3, scrollAmount[centerItem] / 100 * 0.4)
+            opacity: Math.min(1, scrollAmount[centerItem] / 100),
+            zIndex: 2 
           }}
         >
+          <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
+            {/* Horizontal and vertical grid lines that grow with expansion */}
+            <line x1="0" y1="50" x2="100" y2="50" stroke="rgba(65,182,255,0.4)" strokeWidth="0.2" />
+            <line x1="50" y1="0" x2="50" y2="100" stroke="rgba(65,182,255,0.4)" strokeWidth="0.2" />
+            
+            {/* Diagonal grid lines */}
+            <line x1="0" y1="0" x2="100" y2="100" stroke="rgba(65,182,255,0.3)" strokeWidth="0.2" />
+            <line x1="100" y1="0" x2="0" y2="100" stroke="rgba(65,182,255,0.3)" strokeWidth="0.2" />
+          </svg>
+        </div>
+      )}
+
+      {/* Add connecting lines between boxes ONLY during expansion */}
+      {centerItem && scrollAmount[centerItem] && scrollAmount[centerItem] > 20 && (
+        <svg 
+          className="absolute inset-0 w-full h-full pointer-events-none"
+          style={{ 
+            opacity: Math.min(0.9, scrollAmount[centerItem] / 100),
+            zIndex: 4
+          }}
+        >
+          {/* Draw organic connecting lines in the gaps */}
           {items.map((item) => {
             if (item.id === centerItem || !itemRefs.current[item.id] || !itemRefs.current[centerItem || '']) return null;
             
@@ -794,52 +841,60 @@ export default function DesignSystem() {
             
             if (!centerBox || !currBox) return null;
             
-            // Calculate line coordinates
+            // Calculate midpoint for curved lines
             const centerX = centerBox.left + centerBox.width / 2;
             const centerY = centerBox.top + centerBox.height / 2;
             const currX = currBox.left + currBox.width / 2;
             const currY = currBox.top + currBox.height / 2;
             
-            // Determine line style based on box position
-            let strokeColor;
-            switch(item.id) {
-              case "framework": strokeColor = "#2c3e50"; break;
-              case "voice": strokeColor = "#f1c40f"; break;
-              case "typography": strokeColor = "#ff7f50"; break;
-              case "color": strokeColor = "#ff9f43"; break;
-              case "iconography": strokeColor = "#b8e994"; break;
-              case "imagery": strokeColor = "#8e44ad"; break;
-              case "motion": strokeColor = "#d8b5ff"; break;
-              default: strokeColor = "#888888"; break;
-            }
+            // Calculate control points for curved lines
+            const midX = (centerX + currX) / 2;
+            const midY = (centerY + currY) / 2;
+            
+            // Add some variation to control points
+            const ctrlX = midX + (Math.random() * 20 - 10);
+            const ctrlY = midY + (Math.random() * 20 - 10);
+            
+            // Light blue connecting lines
+            const strokeColor = "rgba(65,182,255,0.7)";
+            
+            // Create path for curved line
+            const path = `M ${centerX} ${centerY} Q ${ctrlX} ${ctrlY} ${currX} ${currY}`;
             
             const lineDashLength = Math.sqrt(
               Math.pow(centerX - currX, 2) + Math.pow(centerY - currY, 2)
-            );
+            ) * 1.5; // Multiply by 1.5 to account for curve
             
             const dashProgress = Math.min(1, scrollAmount[centerItem] / 100 * 1.5);
             
             return (
-              <motion.line
+              <motion.path
                 key={`line-${item.id}`}
-                x1={centerX}
-                y1={centerY}
-                x2={currX}
-                y2={currY}
+                d={path}
                 stroke={strokeColor}
-                strokeWidth="1"
+                strokeWidth="2"
+                strokeLinecap="round"
+                fill="none"
                 strokeDasharray={lineDashLength}
                 strokeDashoffset={lineDashLength * (1 - dashProgress)}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ duration: 0.5 }}
+                transition={{ duration: 0.8 }}
               />
             );
           })}
         </svg>
       )}
 
-      <div className="grid grid-cols-3 grid-rows-3 gap-4 h-full w-full max-h-screen max-w-screen p-8 relative z-10">
+      <div 
+        className={`grid grid-cols-3 grid-rows-3 h-full w-full max-h-screen max-w-screen p-8 relative`}
+        style={{
+          gap: centerItem && typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] > 0
+            ? `${20 + scrollAmount[centerItem] * 0.6}px` // Increased gap multiplier for more spacing
+            : '1.25rem',
+          zIndex: 5 // Above the grid lines
+        }}
+      >
         {items.map((item) => {
           // Set grid positions to create a 3x3 grid with logo in center
           let gridPosition = "";
@@ -878,7 +933,9 @@ export default function DesignSystem() {
                 if (item.id === centerItem) return { x: 0, y: 0 };
                 
                 // Use exponential factor to make boxes move faster as they get further
-                const moveOutFactor = Math.pow(scrollAmount[centerItem] / 100, 1.5) * 200;
+                // Add minimum distance to ensure boxes start moving immediately and maintain gaps
+                const baseDistance = 50; // Minimum distance to maintain gap
+                const moveOutFactor = baseDistance + Math.pow(scrollAmount[centerItem] / 100, 1.2) * 250;
                 
                 // Explicitly use the id as a string to avoid TypeScript errors
                 const id = item.id;
@@ -886,17 +943,17 @@ export default function DesignSystem() {
                   case "framework": // top-left
                     return { x: -moveOutFactor, y: -moveOutFactor };
                   case "voice": // top-center
-                    return { x: 0, y: -moveOutFactor * 1.2 };
+                    return { x: 0, y: -moveOutFactor * 1.1 };
                   case "typography": // top-right
                     return { x: moveOutFactor, y: -moveOutFactor };
                   case "color": // middle-left
-                    return { x: -moveOutFactor * 1.2, y: 0 };
+                    return { x: -moveOutFactor * 1.1, y: 0 };
                   case "iconography": // middle-right
-                    return { x: moveOutFactor * 1.2, y: 0 };
+                    return { x: moveOutFactor * 1.1, y: 0 };
                   case "imagery": // bottom-left
                     return { x: -moveOutFactor, y: moveOutFactor };
                   case "motion": // bottom-center
-                    return { x: 0, y: moveOutFactor * 1.2 };
+                    return { x: 0, y: moveOutFactor * 1.1 };
                   default: // bottom-right
                     return { x: moveOutFactor, y: moveOutFactor };
                 }
@@ -938,9 +995,9 @@ export default function DesignSystem() {
                 // Apply intermediate expansion states for center item during scroll
                 ...(item.id === centerItem && !expandedItem && centerItem && 
                    typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] > 0 && {
-                  width: `calc(100% + ${scrollAmount[centerItem] * 4}px)`, // Increased from 3 to 4 for more expansion
-                  height: `calc(100% + ${scrollAmount[centerItem] * 4}px)`, // Increased from 3 to 4 for more expansion
-                  margin: `-${scrollAmount[centerItem] * 2}px`, // Increased from 1.5 to 2 for more margin
+                  width: `calc(100% + ${scrollAmount[centerItem] * 3}px)`, // Reduced multiplier to prevent overlap
+                  height: `calc(100% + ${scrollAmount[centerItem] * 3}px)`, // Reduced multiplier to prevent overlap
+                  margin: `-${scrollAmount[centerItem] * 1.5}px`, // Maintain proportional margin
                   zIndex: 25
                 }),
               }}
@@ -993,13 +1050,18 @@ export default function DesignSystem() {
                       backgroundColor: hoveredItem === item.id ? '#000000' : item.bgColor,
                     }}
                   >
-                    {/* Add decorative lines in the expanded view */}
+                    {/* Add decorative lines in the expanded view - light blue */}
                     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                      <svg width="100%" height="100%" className="opacity-10">
-                        <pattern id="expandedGrid" width="60" height="60" patternUnits="userSpaceOnUse">
-                          <path d="M 60 0 L 0 0 0 60" fill="none" stroke="currentColor" strokeWidth="1" />
+                      <svg width="100%" height="100%" className="opacity-50">
+                        <pattern id="expandedGrid" width="40" height="40" patternUnits="userSpaceOnUse">
+                          <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(65,182,255,0.5)" strokeWidth="1" />
                         </pattern>
                         <rect width="100%" height="100%" fill="url(#expandedGrid)" />
+                        
+                        <pattern id="expandedLargeGrid" width="120" height="120" patternUnits="userSpaceOnUse">
+                          <path d="M 120 0 L 0 0 0 120" fill="none" stroke="rgba(65,182,255,0.6)" strokeWidth="1.5" />
+                        </pattern>
+                        <rect width="100%" height="100%" fill="url(#expandedLargeGrid)" />
                       </svg>
                     </div>
                     
