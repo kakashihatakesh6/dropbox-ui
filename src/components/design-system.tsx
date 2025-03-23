@@ -6,20 +6,34 @@ import { useState, useRef, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { LockIcon, UnlockIcon, MoonIcon, PaletteIcon, TypeIcon, RefreshCwIcon } from "lucide-react"
 
-export default function DesignSystem() {
+interface DesignSystemProps {
+  initialCenterItem?: string | null;
+}
+
+export default function DesignSystem({ initialCenterItem }: DesignSystemProps = {}) {
   const [expandedItem, setExpandedItem] = useState<string | null>(null)
   const [hoveredItem, setHoveredItem] = useState<string | null>(null)
-  const [centerItem, setCenterItem] = useState<string | null>("logo")  // Default center item
+  const [centerItem, setCenterItem] = useState<string | null>(initialCenterItem || "logo")  // Use provided initial center item or default to logo
   const [scrollAmount, setScrollAmount] = useState<Record<string, number>>({})
   const containerRef = useRef<HTMLDivElement>(null)
   const itemRefs = useRef<Record<string, HTMLDivElement | null>>({})
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
+  // Update centerItem when initialCenterItem changes
+  useEffect(() => {
+    if (initialCenterItem !== undefined) {
+      setCenterItem(initialCenterItem);
+    }
+  }, [initialCenterItem]);
+
   // Calculate which item is in the center of the viewport
   useEffect(() => {
     const calculateCenterItem = () => {
       if (!containerRef.current) return
-      setCenterItem("logo") // Force logo to be the center item
+      // Only calculate if initialCenterItem is not provided
+      if (initialCenterItem === undefined) {
+        setCenterItem("logo") // Force logo to be the center item
+      }
     }
 
     calculateCenterItem()
@@ -43,7 +57,7 @@ export default function DesignSystem() {
         clearTimeout(scrollTimeoutRef.current)
       }
     }
-  }, [])
+  }, [initialCenterItem])
 
   // Track scroll amount for the center item only
   const handleWheel = (e: React.WheelEvent) => {
