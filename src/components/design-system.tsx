@@ -127,8 +127,25 @@ export default function DesignSystem() {
   const getItemOpacity = (item: string) => {
     // When an item is fully expanded, make other items completely invisible
     if (expandedItem && expandedItem !== item) return 0
-    // Fade out other items as center expands
+    // Fade out other items as they move toward viewport edges
     if (item !== centerItem && centerItem && typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] > 0) {
+      const box = itemRefs.current[item]?.getBoundingClientRect();
+      if (box) {
+        // Calculate distance from center of viewport
+        const viewportCenterX = window.innerWidth / 2;
+        const viewportCenterY = window.innerHeight / 2;
+        const boxCenterX = box.left + box.width / 2;
+        const boxCenterY = box.top + box.height / 2;
+        
+        // Calculate normalized distance from center (0-1)
+        const distance = Math.sqrt(
+          Math.pow((boxCenterX - viewportCenterX) / (window.innerWidth / 2), 2) +
+          Math.pow((boxCenterY - viewportCenterY) / (window.innerHeight / 2), 2)
+        );
+        
+        // Fade out as distance increases and scroll amount increases
+        return Math.max(0, 1 - distance * scrollAmount[centerItem] / 70);
+      }
       return Math.max(0.2, 1 - scrollAmount[centerItem] / 100 * 0.8)
     }
     return 1
@@ -140,14 +157,12 @@ export default function DesignSystem() {
     if (item === centerItem) {
       // Make center item expand during expansion
       return centerItem && typeof scrollAmount[centerItem] === 'number'
-        ? 1 + (scrollAmount[centerItem] / 100) * 0.5
+        ? 1 + (scrollAmount[centerItem] / 100) * 0.7
         : 1
     }
     if (item === hoveredItem && !scrollAmount[centerItem || '']) return 1.05
-    // Make other items shrink more as center expands
-    return item !== centerItem && centerItem && typeof scrollAmount[centerItem] === 'number'
-      ? Math.max(0.4, 1 - (scrollAmount[centerItem]) / 100 * 0.6)
-      : 1
+    // Keep other items at their original size
+    return 1
   }
 
   // Get z-index for proper layering
@@ -844,26 +859,40 @@ export default function DesignSystem() {
       {centerItem && scrollAmount[centerItem] && scrollAmount[centerItem] > 0 && (
         <div className="fixed inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
           <svg width="100%" height="100%" className="absolute inset-0">
+            {/* Extra small grid pattern */}
+            <pattern id="xsmallGrid" width="10" height="10" patternUnits="userSpaceOnUse">
+              <rect width="10" height="10" fill="none" />
+              <path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(65,182,255,0.1)" strokeWidth="0.5" />
+            </pattern>
+            <rect width="100vw" height="100vh" fill="url(#xsmallGrid)" />
+            
             {/* Small grid pattern */}
             <pattern id="smallGrid" width="20" height="20" patternUnits="userSpaceOnUse">
               <rect width="20" height="20" fill="none" />
-              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(65,182,255,0.4)" strokeWidth="0.8" />
+              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(65,182,255,0.15)" strokeWidth="0.6" />
             </pattern>
             <rect width="100vw" height="100vh" fill="url(#smallGrid)" />
             
             {/* Medium grid pattern */}
-            <pattern id="mediumGrid" width="60" height="60" patternUnits="userSpaceOnUse">
-              <rect width="60" height="60" fill="none" />
-              <path d="M 60 0 L 0 0 0 60" fill="none" stroke="rgba(65,182,255,0.5)" strokeWidth="1" />
+            <pattern id="mediumGrid" width="50" height="50" patternUnits="userSpaceOnUse">
+              <rect width="50" height="50" fill="none" />
+              <path d="M 50 0 L 0 0 0 50" fill="none" stroke="rgba(65,182,255,0.2)" strokeWidth="0.8" />
             </pattern>
             <rect width="100vw" height="100vh" fill="url(#mediumGrid)" />
             
             {/* Large grid pattern */}
-            <pattern id="largeGrid" width="120" height="120" patternUnits="userSpaceOnUse">
-              <rect width="120" height="120" fill="none" />
-              <path d="M 120 0 L 0 0 0 120" fill="none" stroke="rgba(65,182,255,0.6)" strokeWidth="1.2" />
+            <pattern id="largeGrid" width="100" height="100" patternUnits="userSpaceOnUse">
+              <rect width="100" height="100" fill="none" />
+              <path d="M 100 0 L 0 0 0 100" fill="none" stroke="rgba(65,182,255,0.25)" strokeWidth="1" />
             </pattern>
             <rect width="100vw" height="100vh" fill="url(#largeGrid)" />
+            
+            {/* Extra large grid pattern */}
+            <pattern id="xlGrid" width="200" height="200" patternUnits="userSpaceOnUse">
+              <rect width="200" height="200" fill="none" />
+              <path d="M 200 0 L 0 0 0 200" fill="none" stroke="rgba(65,182,255,0.3)" strokeWidth="1.2" />
+            </pattern>
+            <rect width="100vw" height="100vh" fill="url(#xlGrid)" />
           </svg>
         </div>
       )}
@@ -873,18 +902,22 @@ export default function DesignSystem() {
         <div 
           className="fixed inset-0 w-full h-full pointer-events-none"
           style={{ 
-            opacity: Math.min(1, scrollAmount[centerItem] / 100),
+            opacity: Math.min(0.7, scrollAmount[centerItem] / 100),
             zIndex: 2 
           }}
         >
           <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
-            {/* Horizontal and vertical grid lines that grow with expansion */}
-            <line x1="0" y1="50" x2="100" y2="50" stroke="rgba(65,182,255,0.4)" strokeWidth="0.2" />
-            <line x1="50" y1="0" x2="50" y2="100" stroke="rgba(65,182,255,0.4)" strokeWidth="0.2" />
+            {/* Horizontal and vertical grid lines */}
+            <line x1="0" y1="25" x2="100" y2="25" stroke="rgba(65,182,255,0.2)" strokeWidth="0.2" />
+            <line x1="0" y1="50" x2="100" y2="50" stroke="rgba(65,182,255,0.25)" strokeWidth="0.3" />
+            <line x1="0" y1="75" x2="100" y2="75" stroke="rgba(65,182,255,0.2)" strokeWidth="0.2" />
+            <line x1="25" y1="0" x2="25" y2="100" stroke="rgba(65,182,255,0.2)" strokeWidth="0.2" />
+            <line x1="50" y1="0" x2="50" y2="100" stroke="rgba(65,182,255,0.25)" strokeWidth="0.3" />
+            <line x1="75" y1="0" x2="75" y2="100" stroke="rgba(65,182,255,0.2)" strokeWidth="0.2" />
             
             {/* Diagonal grid lines */}
-            <line x1="0" y1="0" x2="100" y2="100" stroke="rgba(65,182,255,0.3)" strokeWidth="0.2" />
-            <line x1="100" y1="0" x2="0" y2="100" stroke="rgba(65,182,255,0.3)" strokeWidth="0.2" />
+            <line x1="0" y1="0" x2="100" y2="100" stroke="rgba(65,182,255,0.2)" strokeWidth="0.2" />
+            <line x1="100" y1="0" x2="0" y2="100" stroke="rgba(65,182,255,0.2)" strokeWidth="0.2" />
           </svg>
         </div>
       )}
@@ -894,7 +927,7 @@ export default function DesignSystem() {
         <svg 
           className="absolute inset-0 w-full h-full pointer-events-none"
           style={{ 
-            opacity: Math.min(0.9, scrollAmount[centerItem] / 100),
+            opacity: Math.min(0.7, scrollAmount[centerItem] / 100),
             zIndex: 4
           }}
         >
@@ -922,8 +955,8 @@ export default function DesignSystem() {
             const ctrlX = midX + (Math.random() * 20 - 10);
             const ctrlY = midY + (Math.random() * 20 - 10);
             
-            // Light blue connecting lines
-            const strokeColor = "rgba(65,182,255,0.7)";
+            // Very light blue connecting lines
+            const strokeColor = "rgba(65,182,255,0.4)";
             
             // Create path for curved line
             const path = `M ${centerX} ${centerY} Q ${ctrlX} ${ctrlY} ${currX} ${currY}`;
@@ -939,7 +972,7 @@ export default function DesignSystem() {
                 key={`line-${item.id}`}
                 d={path}
                 stroke={strokeColor}
-                strokeWidth="2"
+                strokeWidth="1.5"
                 strokeLinecap="round"
                 fill="none"
                 strokeDasharray={lineDashLength}
@@ -1063,9 +1096,9 @@ export default function DesignSystem() {
                   typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] > 0 && {
                   position: "relative",
                   zIndex: 25,
-                  width: `calc(100% + ${scrollAmount[centerItem] * 0.5}px)`,
-                  height: `calc(100% + ${scrollAmount[centerItem] * 0.5}px)`,
-                  margin: `-${scrollAmount[centerItem] * 0.25}px`,
+                  width: `calc(100% + ${scrollAmount[centerItem] * 0.8}px)`,
+                  height: `calc(100% + ${scrollAmount[centerItem] * 0.8}px)`,
+                  margin: `-${scrollAmount[centerItem] * 0.4}px`,
                 }),
               }}
               transition={{
