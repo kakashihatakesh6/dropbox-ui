@@ -10,9 +10,20 @@ interface DesignSystemProps {
   initialCenterItem?: string | null;
   entranceAnimation?: boolean;
   scrollProgress?: number;
+  logoBounds?: {
+    width: number;
+    height: number;
+    x: number;
+    y: number;
+  };
 }
 
-export default function DesignSystem({ initialCenterItem, entranceAnimation = false, scrollProgress = 0 }: DesignSystemProps = {}) {
+export default function DesignSystem({ 
+  initialCenterItem, 
+  entranceAnimation = false, 
+  scrollProgress = 0,
+  logoBounds
+}: DesignSystemProps = {}) {
   const [expandedItem, setExpandedItem] = useState<string | null>(null)
   const [hoveredItem, setHoveredItem] = useState<string | null>(null)
   const [centerItem, setCenterItem] = useState<string | null>(initialCenterItem || "logo")  // Use provided initial center item or default to logo
@@ -21,6 +32,7 @@ export default function DesignSystem({ initialCenterItem, entranceAnimation = fa
   const itemRefs = useRef<Record<string, HTMLDivElement | null>>({})
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const [isExpanding, setIsExpanding] = useState(false)
+  const [hasInitialized, setHasInitialized] = useState(false)
 
   // Update centerItem when initialCenterItem changes
   useEffect(() => {
@@ -28,6 +40,11 @@ export default function DesignSystem({ initialCenterItem, entranceAnimation = fa
       setCenterItem(initialCenterItem);
     }
   }, [initialCenterItem]);
+
+  // Set initialization flag once mounted
+  useEffect(() => {
+    setHasInitialized(true);
+  }, []);
 
   // Calculate which item is in the center of the viewport
   useEffect(() => {
@@ -196,37 +213,114 @@ export default function DesignSystem({ initialCenterItem, entranceAnimation = fa
     return 1
   }
 
-  // Calculate initial position for entrance animation based on item position
+  // Calculate initial position for entrance animation based on item position and scrollProgress
   const getEntrancePosition = (itemId: string) => {
     if (!entranceAnimation || scrollProgress > 0.8) return { x: 0, y: 0 }
     
     // Apply a staggered entrance based on scrollProgress, complete by 80%
     const entranceProgress = Math.min(scrollProgress * 1.25, 1)
-    const entranceOffset = 1000 * (1 - entranceProgress)
+    
+    // Enhanced entrances - create a scale effect from center to sides
+    // Make effect more dramatic (larger initial offsets)
+    const entranceOffset = 3000 * (1 - entranceProgress)
     
     // Position based on item ID
     switch(itemId) {
       case "framework": // top-left
-        return { x: -entranceOffset, y: -entranceOffset };
+        return { x: -entranceOffset * 1.2, y: -entranceOffset * 1.2 };
       case "voice": // top-center
-        return { x: 0, y: -entranceOffset };
+        return { x: 0, y: -entranceOffset * 1.5 };
       case "typography": // top-right
-        return { x: entranceOffset, y: -entranceOffset };
+        return { x: entranceOffset * 1.2, y: -entranceOffset * 1.2 };
       case "color": // middle-left
-        return { x: -entranceOffset, y: 0 };
-      case "logo": // center
+        return { x: -entranceOffset * 1.5, y: 0 };
+      case "logo": // center - no effect on logo
         return { x: 0, y: 0 };
       case "iconography": // middle-right
-        return { x: entranceOffset, y: 0 };
+        return { x: entranceOffset * 1.5, y: 0 };
       case "imagery": // bottom-left
-        return { x: -entranceOffset, y: entranceOffset };
+        return { x: -entranceOffset * 1.2, y: entranceOffset * 1.2 };
       case "motion": // bottom-center
-        return { x: 0, y: entranceOffset };
+        return { x: 0, y: entranceOffset * 1.5 };
       case "accessibility": // bottom-right
-        return { x: entranceOffset, y: entranceOffset };
+        return { x: entranceOffset * 1.2, y: entranceOffset * 1.2 };
       default:
         return { x: 0, y: 0 };
     }
+  }
+
+  // Calculate initial scale for items appearing
+  const getEntranceScale = (itemId: string) => {
+    if (!entranceAnimation) return 1;
+    
+    // Center logo has a different initial scale
+    if (itemId === "logo") return 1;
+    
+    // Scale used for entrance animation - start very small and grow
+    const entranceScale = scrollProgress < 0.3 ? 0.001 : Math.min(scrollProgress * 1.5, 1);
+    return entranceScale;
+  }
+
+  // Calculate initial opacity for entrance animation
+  const getEntranceOpacity = (itemId: string) => {
+    if (!entranceAnimation) return 1;
+    
+    // Center logo always visible
+    if (itemId === "logo") return 1;
+    
+    // Other items fade in gradually - start completely invisible
+    return Math.min(scrollProgress * 3 - 0.5, 1);
+  }
+
+  // Get the drop shadow effect for each item
+  const getBoxShadow = (itemId: string) => {
+    if (hoveredItem === itemId || centerItem === itemId || expandedItem === itemId) {
+      return "0 10px 25px rgba(0,0,0,0.2)";
+    }
+    
+    if (itemId === "logo" && entranceAnimation && scrollProgress < 0.5) {
+      // Special highlight for center logo during transition
+      return "0 0 30px rgba(0,97,255,0.3)";
+    }
+    
+    return "0 4px 6px rgba(0,0,0,0.1)";
+  }
+
+  // Get initial position for logo box to match Dropbox interface position
+  const getLogoInitialPosition = (itemId: string) => {
+    // Only apply to logo during entrance animation and initial phase
+    if (itemId !== "logo" || !entranceAnimation || !logoBounds || !hasInitialized) {
+      return { x: 0, y: 0 };
+    }
+    
+    // Get the container's position to calculate relative position
+    const containerRect = containerRef.current?.getBoundingClientRect();
+    if (!containerRect) return { x: 0, y: 0 };
+    
+    // Calculate center of container
+    const containerCenterX = containerRect.width / 2;
+    const containerCenterY = containerRect.height / 2;
+    
+    // Calculate the center of the logo from Dropbox interface
+    const logoCenterX = logoBounds.x + logoBounds.width / 2;
+    const logoCenterY = logoBounds.y + logoBounds.height / 2;
+    
+    // Calculate offset (distance from center)
+    const offsetX = logoCenterX - (containerRect.x + containerCenterX);
+    const offsetY = logoCenterY - (containerRect.y + containerCenterY);
+    
+    // Create a more dynamic transition effect
+    // Use different easing for a more natural transition
+    // Transition should be complete by scrollProgress of 0.5
+    const transitionProgress = Math.min(1, scrollProgress <= 0.1 ? 0 : scrollProgress / 0.5);
+    
+    // Apply easing function (ease-out cubic)
+    const easedProgress = 1 - Math.pow(1 - transitionProgress, 3);
+    
+    return {
+      x: offsetX * (1 - easedProgress),
+      y: offsetY * (1 - easedProgress)
+    };
   }
 
   // Items data for easier mapping
@@ -1106,21 +1200,25 @@ export default function DesignSystem({ initialCenterItem, entranceAnimation = fa
               })()
             : { x: 0, y: 0 };
           
+          // Get initial position from logo bounds for the transition animation
+          const initialLogoPosition = getLogoInitialPosition(item.id);
+          
           return (
             <motion.div
               key={item.id}
               ref={(el: HTMLDivElement | null) => { itemRefs.current[item.id] = el }}
               className={`bg-[${item.bgColor}] text-[${item.textColor}] p-4 overflow-hidden relative rounded-xl shadow-lg ${gridPosition} transition-colors`}
               initial={entranceAnimation ? {
-                opacity: 0,
-                x: getEntrancePosition(item.id).x,
-                y: getEntrancePosition(item.id).y
+                opacity: getEntranceOpacity(item.id),
+                scale: getEntranceScale(item.id),
+                x: getEntrancePosition(item.id).x + initialLogoPosition.x,
+                y: getEntrancePosition(item.id).y + initialLogoPosition.y
               } : undefined}
               animate={{
                 opacity: getItemOpacity(item.id),
                 scale: getItemSize(item.id),
-                x: positionOffset.x,
-                y: positionOffset.y,
+                x: positionOffset.x + initialLogoPosition.x,
+                y: positionOffset.y + initialLogoPosition.y,
                 zIndex: getZIndex(item.id),
                 backgroundColor: item.bgColor, // Keep original background color
                 color: item.textColor, // Keep original text color 
@@ -1130,9 +1228,7 @@ export default function DesignSystem({ initialCenterItem, entranceAnimation = fa
                        scrollAmount[centerItem] > 70 
                   ? `blur(${(scrollAmount[centerItem] - 70) / 30}px)` 
                   : "blur(0px)",
-                boxShadow: hoveredItem === item.id || centerItem === item.id || expandedItem === item.id 
-                  ? "0 10px 25px rgba(0,0,0,0.2)" 
-                  : "0 4px 6px rgba(0,0,0,0.1)",
+                boxShadow: getBoxShadow(item.id),
                 // Fixed expanded state properties
                 ...(expandedItem === item.id && {
                   position: "fixed",
