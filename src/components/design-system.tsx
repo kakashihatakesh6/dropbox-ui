@@ -8,9 +8,11 @@ import { LockIcon, UnlockIcon, MoonIcon, PaletteIcon, TypeIcon, RefreshCwIcon } 
 
 interface DesignSystemProps {
   initialCenterItem?: string | null;
+  entranceAnimation?: boolean;
+  scrollProgress?: number;
 }
 
-export default function DesignSystem({ initialCenterItem }: DesignSystemProps = {}) {
+export default function DesignSystem({ initialCenterItem, entranceAnimation = false, scrollProgress = 0 }: DesignSystemProps = {}) {
   const [expandedItem, setExpandedItem] = useState<string | null>(null)
   const [hoveredItem, setHoveredItem] = useState<string | null>(null)
   const [centerItem, setCenterItem] = useState<string | null>(initialCenterItem || "logo")  // Use provided initial center item or default to logo
@@ -141,7 +143,7 @@ export default function DesignSystem({ initialCenterItem }: DesignSystemProps = 
     setHoveredItem(null)
   }
 
-  // Get expansion scale for an item (0-1) with improved stability
+  // Get position offset for an item (0-1) with improved stability
   const getExpansionScale = (item: string) => {
     if (expandedItem === item) return 1
     if (item === centerItem) {
@@ -192,6 +194,39 @@ export default function DesignSystem({ initialCenterItem }: DesignSystemProps = 
     if (item === centerItem) return 20
     if (item === hoveredItem) return 10
     return 1
+  }
+
+  // Calculate initial position for entrance animation based on item position
+  const getEntrancePosition = (itemId: string) => {
+    if (!entranceAnimation || scrollProgress > 0.8) return { x: 0, y: 0 }
+    
+    // Apply a staggered entrance based on scrollProgress, complete by 80%
+    const entranceProgress = Math.min(scrollProgress * 1.25, 1)
+    const entranceOffset = 1000 * (1 - entranceProgress)
+    
+    // Position based on item ID
+    switch(itemId) {
+      case "framework": // top-left
+        return { x: -entranceOffset, y: -entranceOffset };
+      case "voice": // top-center
+        return { x: 0, y: -entranceOffset };
+      case "typography": // top-right
+        return { x: entranceOffset, y: -entranceOffset };
+      case "color": // middle-left
+        return { x: -entranceOffset, y: 0 };
+      case "logo": // center
+        return { x: 0, y: 0 };
+      case "iconography": // middle-right
+        return { x: entranceOffset, y: 0 };
+      case "imagery": // bottom-left
+        return { x: -entranceOffset, y: entranceOffset };
+      case "motion": // bottom-center
+        return { x: 0, y: entranceOffset };
+      case "accessibility": // bottom-right
+        return { x: entranceOffset, y: entranceOffset };
+      default:
+        return { x: 0, y: 0 };
+    }
   }
 
   // Items data for easier mapping
@@ -355,8 +390,8 @@ export default function DesignSystem({ initialCenterItem }: DesignSystemProps = 
     {
       id: "logo",
       title: "Logo",
-      bgColor: "#48dbfb",
-      textColor: "#0a3d62",
+      bgColor: "#ffffff",
+      textColor: "#0061FF",
       content: (
         <div className="flex justify-center items-center h-full">
           {hoveredItem === "logo" ? (
@@ -366,12 +401,12 @@ export default function DesignSystem({ initialCenterItem }: DesignSystemProps = 
               className="relative w-14 h-14"
             >
               <svg 
+                viewBox="0 0 256 256" 
                 xmlns="http://www.w3.org/2000/svg" 
-                viewBox="0 0 24 24" 
-                fill="#0a3d62" 
+                preserveAspectRatio="xMidYMid"
                 className="w-full h-full"
               >
-                <path d="M12 2l5.5 5.5-5.5 5.5-5.5-5.5 5.5-5.5zM5.5 14.5l5.5 5.5 5.5-5.5-5.5-5.5-5.5 5.5z"/>
+                <path d="M63.246 0L0 41.625l43.766 35.22 64.764-39.812-45.284-37.033zm129.728 0L147.69 37.033l64.762 39.812 43.768-35.22L193.735 0h-.761zm-129.728 115.6L0 74.336l43.766-35.033 64.764 39.626-45.284 36.672zm129.728 0L147.69 73.93l64.762-39.626 43.768 35.032-63.52 41.264zm-65.202 42.627l-45.046-36.848-45.285 36.848 45.285 37.22 45.046-37.22z" fill="#0061FF" />
               </svg>
             </motion.div>
           ) : (
@@ -388,12 +423,12 @@ export default function DesignSystem({ initialCenterItem }: DesignSystemProps = 
               }}
             >
               <svg 
+                viewBox="0 0 256 256" 
                 xmlns="http://www.w3.org/2000/svg" 
-                viewBox="0 0 24 24" 
-                fill="#0a3d62" 
+                preserveAspectRatio="xMidYMid"
                 className="w-full h-full"
               >
-                <path d="M12 2l5.5 5.5-5.5 5.5-5.5-5.5 5.5-5.5zM5.5 14.5l5.5 5.5 5.5-5.5-5.5-5.5-5.5 5.5z"/>
+                <path d="M63.246 0L0 41.625l43.766 35.22 64.764-39.812-45.284-37.033zm129.728 0L147.69 37.033l64.762 39.812 43.768-35.22L193.735 0h-.761zm-129.728 115.6L0 74.336l43.766-35.033 64.764 39.626-45.284 36.672zm129.728 0L147.69 73.93l64.762-39.626 43.768 35.032-63.52 41.264zm-65.202 42.627l-45.046-36.848-45.285 36.848 45.285 37.22 45.046-37.22z" fill="#0061FF" />
               </svg>
             </motion.div>
           )}
@@ -1076,6 +1111,11 @@ export default function DesignSystem({ initialCenterItem }: DesignSystemProps = 
               key={item.id}
               ref={(el: HTMLDivElement | null) => { itemRefs.current[item.id] = el }}
               className={`bg-[${item.bgColor}] text-[${item.textColor}] p-4 overflow-hidden relative rounded-xl shadow-lg ${gridPosition} transition-colors`}
+              initial={entranceAnimation ? {
+                opacity: 0,
+                x: getEntrancePosition(item.id).x,
+                y: getEntrancePosition(item.id).y
+              } : undefined}
               animate={{
                 opacity: getItemOpacity(item.id),
                 scale: getItemSize(item.id),
@@ -1173,12 +1213,12 @@ export default function DesignSystem({ initialCenterItem }: DesignSystemProps = 
                         }}
                       >
                         <svg 
+                          viewBox="0 0 256 256" 
                           xmlns="http://www.w3.org/2000/svg" 
-                          viewBox="0 0 24 24" 
-                          fill="#0a3d62" 
+                          preserveAspectRatio="xMidYMid"
                           className="w-full h-full"
                         >
-                          <path d="M12 2l5.5 5.5-5.5 5.5-5.5-5.5 5.5-5.5zM5.5 14.5l5.5 5.5 5.5-5.5-5.5-5.5-5.5 5.5z"/>
+                          <path d="M63.246 0L0 41.625l43.766 35.22 64.764-39.812-45.284-37.033zm129.728 0L147.69 37.033l64.762 39.812 43.768-35.22L193.735 0h-.761zm-129.728 115.6L0 74.336l43.766-35.033 64.764 39.626-45.284 36.672zm129.728 0L147.69 73.93l64.762-39.626 43.768 35.032-63.52 41.264zm-65.202 42.627l-45.046-36.848-45.285 36.848 45.285 37.22 45.046-37.22z" fill="#0061FF" />
                         </svg>
                       </motion.div>
                     ) : (
@@ -1388,6 +1428,8 @@ export default function DesignSystem({ initialCenterItem }: DesignSystemProps = 
           )
         })}
       </div>
+
+      
     </div>
   )
 }
