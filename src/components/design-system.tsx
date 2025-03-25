@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client"
 
 import type React from "react"
@@ -18,9 +19,9 @@ interface DesignSystemProps {
   };
 }
 
-export default function DesignSystem({ 
-  initialCenterItem, 
-  entranceAnimation = false, 
+export default function DesignSystem({
+  initialCenterItem,
+  entranceAnimation = false,
   scrollProgress = 0,
   logoBounds
 }: DesignSystemProps = {}) {
@@ -46,6 +47,8 @@ export default function DesignSystem({
     setHasInitialized(true);
   }, []);
 
+  console.log("scroll amount", scrollAmount)
+
   // Calculate which item is in the center of the viewport
   useEffect(() => {
     const calculateCenterItem = () => {
@@ -57,19 +60,19 @@ export default function DesignSystem({
     }
 
     calculateCenterItem()
-    
+
     const handleScroll = () => {
       // Keep logo as center item, but track scroll for expansion
-      
+
       // Clear previous timeout
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current)
       }
     }
-    
+
     window.addEventListener('scroll', handleScroll)
     window.addEventListener('resize', calculateCenterItem)
-    
+
     return () => {
       window.removeEventListener('scroll', handleScroll)
       window.removeEventListener('resize', calculateCenterItem)
@@ -82,7 +85,7 @@ export default function DesignSystem({
   // Track scroll amount for the center item only with improved stability
   const handleWheel = (e: React.WheelEvent) => {
     if (!centerItem || expandedItem) return
-    
+
     e.preventDefault() // Prevent default scroll behavior
 
     // Only allow scrolling to start changing the UI after a deliberate action
@@ -112,7 +115,7 @@ export default function DesignSystem({
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current)
       }
-      
+
       // Set a timeout to snap to thresholds for stability
       scrollTimeoutRef.current = setTimeout(() => {
         if (newAmount > 85) {
@@ -145,7 +148,7 @@ export default function DesignSystem({
         ...prev,
         [item]: 0
       }))
-      
+
       setTimeout(() => {
         setExpandedItem(null)
       }, 300)
@@ -168,7 +171,7 @@ export default function DesignSystem({
         ...prev,
         [item]: 20 // Start at 20% to begin the expansion animation
       }))
-      
+
       // Only set expandedItem if it's a deliberate click, not from scrolling to 100%
       // We now delay setting the expandedItem to allow for smoother expansion
       if (item !== centerItem || (item === centerItem && scrollAmount[centerItem] !== 100)) {
@@ -177,13 +180,13 @@ export default function DesignSystem({
           setScrollAmount(prev => {
             const currAmount = prev[item] || 0;
             const newAmount = Math.min(100, currAmount + 5); // Increment by 5% each step
-            
+
             // Once we reach 100%, set the expanded item
             if (newAmount === 100) {
               clearInterval(expandInterval);
               setExpandedItem(item);
             }
-            
+
             return {
               ...prev,
               [item]: newAmount
@@ -206,8 +209,8 @@ export default function DesignSystem({
       // Simplify center item expansion calculation
       return ((centerItem && scrollAmount[centerItem]) || 0) / 100
     }
-    if (item === hoveredItem && 
-        (!centerItem || !scrollAmount[centerItem] || scrollAmount[centerItem] === 0)) {
+    if (item === hoveredItem &&
+      (!centerItem || !scrollAmount[centerItem] || scrollAmount[centerItem] === 0)) {
       return 0.5 // Only show hover animation when not scrolling
     }
     return 0
@@ -217,15 +220,15 @@ export default function DesignSystem({
   const getItemOpacity = (item: string) => {
     // When an item is fully expanded, make other items completely invisible
     if (expandedItem && expandedItem !== item) return 0
-    
+
     // Start fading out only in final 10% of expansion
-    if (item !== centerItem && centerItem && 
-        typeof scrollAmount[centerItem] === 'number' && 
-        scrollAmount[centerItem] > 90) {
+    if (item !== centerItem && centerItem &&
+      typeof scrollAmount[centerItem] === 'number' &&
+      scrollAmount[centerItem] > 90) {
       // Fade out in the last 10% of expansion (from 90% to 100%)
       return 1 - ((scrollAmount[centerItem] - 90) / 10)
     }
-    
+
     // Otherwise maintain full opacity
     return 1
   }
@@ -237,8 +240,8 @@ export default function DesignSystem({
       // Simplified growth logic
       return 1 + ((scrollAmount[centerItem] || 0) / 100) * 0.2
     }
-    if (item === hoveredItem && 
-        (!centerItem || !scrollAmount[centerItem] || scrollAmount[centerItem] === 0)) {
+    if (item === hoveredItem &&
+      (!centerItem || !scrollAmount[centerItem] || scrollAmount[centerItem] === 0)) {
       return 1.05
     }
     // Keep other items at their original size
@@ -271,16 +274,16 @@ export default function DesignSystem({
   // Calculate initial position for entrance animation based on item position and scrollProgress
   const getEntrancePosition = (itemId: string) => {
     if (!entranceAnimation || scrollProgress > 0.8) return { x: 0, y: 0 }
-    
+
     // Apply a staggered entrance based on scrollProgress, complete by 80%
     const entranceProgress = Math.min(scrollProgress * 1.25, 1)
-    
+
     // Enhanced entrances - create a scale effect from center to sides
     // Make effect more dramatic (larger initial offsets)
     const entranceOffset = 3000 * (1 - entranceProgress)
-    
+
     // Position based on item ID
-    switch(itemId) {
+    switch (itemId) {
       case "framework": // top-left
         return { x: -entranceOffset * 1.2, y: -entranceOffset * 1.2 };
       case "voice": // top-center
@@ -307,10 +310,10 @@ export default function DesignSystem({
   // Calculate initial scale for items appearing
   const getEntranceScale = (itemId: string) => {
     if (!entranceAnimation) return 1;
-    
+
     // Center logo has a different initial scale
     if (itemId === "logo") return 1;
-    
+
     // Scale used for entrance animation - start very small and grow
     const entranceScale = scrollProgress < 0.3 ? 0.001 : Math.min(scrollProgress * 1.5, 1);
     return entranceScale;
@@ -319,10 +322,10 @@ export default function DesignSystem({
   // Calculate initial opacity for entrance animation
   const getEntranceOpacity = (itemId: string) => {
     if (!entranceAnimation) return 1;
-    
+
     // Center logo always visible
     if (itemId === "logo") return 1;
-    
+
     // Other items fade in gradually - start completely invisible
     return Math.min(scrollProgress * 3 - 0.5, 1);
   }
@@ -332,12 +335,12 @@ export default function DesignSystem({
     if (hoveredItem === itemId || centerItem === itemId || expandedItem === itemId) {
       return "0 10px 25px rgba(0,0,0,0.2)";
     }
-    
+
     if (itemId === "logo" && entranceAnimation && scrollProgress < 0.5) {
       // Special highlight for center logo during transition
       return "0 0 30px rgba(0,97,255,0.3)";
     }
-    
+
     return "0 4px 6px rgba(0,0,0,0.1)";
   }
 
@@ -347,31 +350,31 @@ export default function DesignSystem({
     if (itemId !== "logo" || !entranceAnimation || !logoBounds || !hasInitialized) {
       return { x: 0, y: 0 };
     }
-    
+
     // Get the container's position to calculate relative position
     const containerRect = containerRef.current?.getBoundingClientRect();
     if (!containerRect) return { x: 0, y: 0 };
-    
+
     // Calculate center of container
     const containerCenterX = containerRect.width / 2;
     const containerCenterY = containerRect.height / 2;
-    
+
     // Calculate the center of the logo from Dropbox interface
     const logoCenterX = logoBounds.x + logoBounds.width / 2;
     const logoCenterY = logoBounds.y + logoBounds.height / 2;
-    
+
     // Calculate offset (distance from center)
     const offsetX = logoCenterX - (containerRect.x + containerCenterX);
     const offsetY = logoCenterY - (containerRect.y + containerCenterY);
-    
+
     // Create a more dynamic transition effect
     // Use different easing for a more natural transition
     // Transition should be complete by scrollProgress of 0.5
     const transitionProgress = Math.min(1, scrollProgress <= 0.1 ? 0 : scrollProgress / 0.5);
-    
+
     // Apply easing function (ease-out cubic)
     const easedProgress = 1 - Math.pow(1 - transitionProgress, 3);
-    
+
     return {
       x: offsetX * (1 - easedProgress),
       y: offsetY * (1 - easedProgress)
@@ -390,8 +393,8 @@ export default function DesignSystem({
           {hoveredItem === "framework" ? (
             <motion.div
               initial={{ opacity: 0, scale: 0.5 }}
-              animate={{ 
-                opacity: 1, 
+              animate={{
+                opacity: 1,
                 scale: 1,
                 rotate: [0, 15, -15, 15, 0]
               }}
@@ -467,17 +470,17 @@ export default function DesignSystem({
               animate={{ opacity: 1 }}
               transition={{ duration: 0.3 }}
             >
-              <motion.div 
+              <motion.div
                 className="h-1 bg-white w-3/4 rounded-full"
                 animate={{ width: ["20%", "80%", "60%"] }}
                 transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY, repeatType: "loop" }}
               />
-              <motion.div 
+              <motion.div
                 className="h-1 bg-white w-1/2 rounded-full"
                 animate={{ width: ["60%", "30%", "70%"] }}
                 transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY, repeatType: "loop", delay: 0.2 }}
               />
-              <motion.div 
+              <motion.div
                 className="h-1 bg-white w-2/3 rounded-full"
                 animate={{ width: ["40%", "90%", "50%"] }}
                 transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY, repeatType: "loop", delay: 0.4 }}
@@ -549,9 +552,9 @@ export default function DesignSystem({
               animate={{ opacity: 1 }}
               className="relative w-14 h-14"
             >
-              <svg 
-                viewBox="0 0 256 256" 
-                xmlns="http://www.w3.org/2000/svg" 
+              <svg
+                viewBox="0 0 256 256"
+                xmlns="http://www.w3.org/2000/svg"
                 preserveAspectRatio="xMidYMid"
                 className="w-full h-full"
               >
@@ -564,16 +567,16 @@ export default function DesignSystem({
               animate={{
                 scale: 1 + 0.05 * getExpansionScale("logo"),
               }}
-              transition={{ 
+              transition={{
                 type: "spring",
                 stiffness: 400,
                 damping: 30,
                 duration: 0.2
               }}
             >
-              <svg 
-                viewBox="0 0 256 256" 
-                xmlns="http://www.w3.org/2000/svg" 
+              <svg
+                viewBox="0 0 256 256"
+                xmlns="http://www.w3.org/2000/svg"
                 preserveAspectRatio="xMidYMid"
                 className="w-full h-full"
               >
@@ -754,8 +757,8 @@ export default function DesignSystem({
               y: -20 * getExpansionScale("iconography"),
               rotate: hoveredItem === "iconography" ? 360 : 0,
             }}
-            transition={{ 
-              type: "spring", 
+            transition={{
+              type: "spring",
               stiffness: 300,
               rotate: { duration: 0.5 }
             }}
@@ -875,13 +878,13 @@ export default function DesignSystem({
           {hoveredItem === "motion" ? (
             <motion.div
               initial={{ opacity: 0 }}
-              animate={{ 
-                opacity: 1, 
+              animate={{
+                opacity: 1,
                 rotate: 360,
               }}
-              transition={{ 
-                duration: 1.5, 
-                repeat: Number.POSITIVE_INFINITY, 
+              transition={{
+                duration: 1.5,
+                repeat: Number.POSITIVE_INFINITY,
                 repeatType: "loop",
                 ease: "linear"
               }}
@@ -1046,8 +1049,8 @@ export default function DesignSystem({
   ]
 
   return (
-    <div 
-      className="w-full h-screen bg-white flex items-center justify-center overflow-hidden" 
+    <div
+      className="w-full h-screen bg-white flex items-center justify-center overflow-hidden"
       ref={containerRef}
       onWheel={handleWheel} // Add wheel event handler to the container
     >
@@ -1061,28 +1064,28 @@ export default function DesignSystem({
               <path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(65,182,255,0.1)" strokeWidth="0.5" />
             </pattern>
             <rect width="100vw" height="100vh" fill="url(#xsmallGrid)" />
-            
+
             {/* Small grid pattern */}
             <pattern id="smallGrid" width="20" height="20" patternUnits="userSpaceOnUse">
               <rect width="20" height="20" fill="none" />
               <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(65,182,255,0.15)" strokeWidth="0.6" />
             </pattern>
             <rect width="100vw" height="100vh" fill="url(#smallGrid)" />
-            
+
             {/* Medium grid pattern */}
             <pattern id="mediumGrid" width="50" height="50" patternUnits="userSpaceOnUse">
               <rect width="50" height="50" fill="none" />
               <path d="M 50 0 L 0 0 0 50" fill="none" stroke="rgba(65,182,255,0.2)" strokeWidth="0.8" />
             </pattern>
             <rect width="100vw" height="100vh" fill="url(#mediumGrid)" />
-            
+
             {/* Large grid pattern */}
             <pattern id="largeGrid" width="100" height="100" patternUnits="userSpaceOnUse">
               <rect width="100" height="100" fill="none" />
               <path d="M 100 0 L 0 0 0 100" fill="none" stroke="rgba(65,182,255,0.25)" strokeWidth="1" />
             </pattern>
             <rect width="100vw" height="100vh" fill="url(#largeGrid)" />
-            
+
             {/* Extra large grid pattern */}
             <pattern id="xlGrid" width="200" height="200" patternUnits="userSpaceOnUse">
               <rect width="200" height="200" fill="none" />
@@ -1095,11 +1098,11 @@ export default function DesignSystem({
 
       {/* Additional grid decorators that ONLY appear during expansion */}
       {centerItem && scrollAmount[centerItem] && scrollAmount[centerItem] > 0 && (
-        <div 
+        <div
           className="fixed inset-0 w-full h-full pointer-events-none"
-          style={{ 
+          style={{
             opacity: Math.min(0.7, scrollAmount[centerItem] / 100),
-            zIndex: 2 
+            zIndex: 2
           }}
         >
           <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -1110,7 +1113,7 @@ export default function DesignSystem({
             <line x1="25" y1="0" x2="25" y2="100" stroke="rgba(65,182,255,0.2)" strokeWidth="0.2" />
             <line x1="50" y1="0" x2="50" y2="100" stroke="rgba(65,182,255,0.25)" strokeWidth="0.3" />
             <line x1="75" y1="0" x2="75" y2="100" stroke="rgba(65,182,255,0.2)" strokeWidth="0.2" />
-            
+
             {/* Diagonal grid lines */}
             <line x1="0" y1="0" x2="100" y2="100" stroke="rgba(65,182,255,0.2)" strokeWidth="0.2" />
             <line x1="100" y1="0" x2="0" y2="100" stroke="rgba(65,182,255,0.2)" strokeWidth="0.2" />
@@ -1120,9 +1123,9 @@ export default function DesignSystem({
 
       {/* Add connecting lines between boxes ONLY during expansion */}
       {centerItem && scrollAmount[centerItem] && scrollAmount[centerItem] > 20 && (
-        <svg 
+        <svg
           className="absolute inset-0 w-full h-full pointer-events-none"
-          style={{ 
+          style={{
             opacity: Math.min(0.7, scrollAmount[centerItem] / 100),
             zIndex: 4
           }}
@@ -1130,39 +1133,39 @@ export default function DesignSystem({
           {/* Draw organic connecting lines in the gaps */}
           {items.map((item) => {
             if (item.id === centerItem || !itemRefs.current[item.id] || !itemRefs.current[centerItem || '']) return null;
-            
+
             // Get center box position
             const centerBox = itemRefs.current[centerItem || '']?.getBoundingClientRect();
             const currBox = itemRefs.current[item.id]?.getBoundingClientRect();
-            
+
             if (!centerBox || !currBox) return null;
-            
+
             // Calculate midpoint for curved lines
             const centerX = centerBox.left + centerBox.width / 2;
             const centerY = centerBox.top + centerBox.height / 2;
             const currX = currBox.left + currBox.width / 2;
             const currY = currBox.top + currBox.height / 2;
-            
+
             // Calculate control points for curved lines
             const midX = (centerX + currX) / 2;
             const midY = (centerY + currY) / 2;
-            
+
             // Add some variation to control points
             const ctrlX = midX + (Math.random() * 20 - 10);
             const ctrlY = midY + (Math.random() * 20 - 10);
-            
+
             // Very light blue connecting lines
             const strokeColor = "rgba(65,182,255,0.4)";
-            
+
             // Create path for curved line
             const path = `M ${centerX} ${centerY} Q ${ctrlX} ${ctrlY} ${currX} ${currY}`;
-            
+
             const lineDashLength = Math.sqrt(
               Math.pow(centerX - currX, 2) + Math.pow(centerY - currY, 2)
             ) * 1.5; // Multiply by 1.5 to account for curve
-            
+
             const dashProgress = Math.min(1, scrollAmount[centerItem] / 100 * 1.5);
-            
+
             return (
               <motion.path
                 key={`line-${item.id}`}
@@ -1182,7 +1185,7 @@ export default function DesignSystem({
         </svg>
       )}
 
-      <div 
+      <div
         className={`grid grid-cols-3 grid-rows-3 h-full w-full max-h-screen max-w-screen p-8 relative`}
         style={{
           gap: '1.25rem', // Fixed gap size that doesn't change during expansion
@@ -1192,7 +1195,7 @@ export default function DesignSystem({
         {items.map((item) => {
           // Set grid positions to create a 3x3 grid with logo in center
           let gridPosition = "";
-          switch(item.id) {
+          switch (item.id) {
             case "framework":
               gridPosition = "col-start-1 col-end-2 row-start-1 row-end-2";
               break;
@@ -1225,53 +1228,53 @@ export default function DesignSystem({
           }
 
           // Calculate position offset for moving items away from center
-          const positionOffset = centerItem && typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] > 0 
+          const positionOffset = centerItem && typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] > 0
             ? (() => {
-                if (item.id === centerItem) return { x: 0, y: 0 };
-                
-                // Use a completely linear movement to eliminate shaking
-                // Start with minimal movement, then accelerate at the end
-                let moveOutFactor = 0;
-                
-                // Use a non-linear curve for movement:
-                // - Move slowly up to 80% expansion
-                // - Move quickly from 80% to 100% to ensure full exit
-                if (scrollAmount[centerItem] <= 80) {
-                  // Slow movement phase (0-80%)
-                  moveOutFactor = (scrollAmount[centerItem] / 100) * 200; // Small factor for initial movement
-                } else {
-                  // Fast exit phase (80-100%)
-                  // Map 80-100% to 0-100% and apply to a larger range
-                  const exitProgress = (scrollAmount[centerItem] - 80) / 20;
-                  moveOutFactor = 200 + (exitProgress * 3000); // Dramatically increase for complete exit
-                }
-                
-                // Fixed positions with equal distances
-                const id = item.id;
-                switch(id) {
-                  case "framework": // top-left
-                    return { x: -moveOutFactor, y: -moveOutFactor };
-                  case "voice": // top-center
-                    return { x: 0, y: -moveOutFactor };
-                  case "typography": // top-right
-                    return { x: moveOutFactor, y: -moveOutFactor };
-                  case "color": // middle-left
-                    return { x: -moveOutFactor, y: 0 };
-                  case "iconography": // middle-right
-                    return { x: moveOutFactor, y: 0 };
-                  case "imagery": // bottom-left
-                    return { x: -moveOutFactor, y: moveOutFactor };
-                  case "motion": // bottom-center
-                    return { x: 0, y: moveOutFactor };
-                  default: // bottom-right
-                    return { x: moveOutFactor, y: moveOutFactor };
-                }
-              })()
+              if (item.id === centerItem) return { x: 0, y: 0 };
+
+              // Use a completely linear movement to eliminate shaking
+              // Start with minimal movement, then accelerate at the end
+              let moveOutFactor = 0;
+
+              // Use a non-linear curve for movement:
+              // - Move slowly up to 80% expansion
+              // - Move quickly from 80% to 100% to ensure full exit
+              if (scrollAmount[centerItem] <= 80) {
+                // Slow movement phase (0-80%)
+                moveOutFactor = (scrollAmount[centerItem] / 100) * 200; // Small factor for initial movement
+              } else {
+                // Fast exit phase (80-100%)
+                // Map 80-100% to 0-100% and apply to a larger range
+                const exitProgress = (scrollAmount[centerItem] - 80) / 20;
+                moveOutFactor = 200 + (exitProgress * 3000); // Dramatically increase for complete exit
+              }
+
+              // Fixed positions with equal distances
+              const id = item.id;
+              switch (id) {
+                case "framework": // top-left
+                  return { x: -moveOutFactor, y: -moveOutFactor };
+                case "voice": // top-center
+                  return { x: 0, y: -moveOutFactor };
+                case "typography": // top-right
+                  return { x: moveOutFactor, y: -moveOutFactor };
+                case "color": // middle-left
+                  return { x: -moveOutFactor, y: 0 };
+                case "iconography": // middle-right
+                  return { x: moveOutFactor, y: 0 };
+                case "imagery": // bottom-left
+                  return { x: -moveOutFactor, y: moveOutFactor };
+                case "motion": // bottom-center
+                  return { x: 0, y: moveOutFactor };
+                default: // bottom-right
+                  return { x: moveOutFactor, y: moveOutFactor };
+              }
+            })()
             : { x: 0, y: 0 };
-          
+
           // Get initial position from logo bounds for the transition animation
           const initialLogoPosition = getLogoInitialPosition(item.id);
-          
+
           return (
             <motion.div
               key={item.id}
@@ -1291,10 +1294,10 @@ export default function DesignSystem({
                 zIndex: getZIndex(item.id),
                 backgroundColor: item.bgColor,
                 color: item.textColor,
-                filter: item.id !== centerItem && centerItem && 
-                       typeof scrollAmount[centerItem] === 'number' && 
-                       scrollAmount[centerItem] > 70 
-                  ? `blur(${(scrollAmount[centerItem] - 70) / 30}px)` 
+                filter: item.id !== centerItem && centerItem &&
+                  typeof scrollAmount[centerItem] === 'number' &&
+                  scrollAmount[centerItem] > 70
+                  ? `blur(${(scrollAmount[centerItem] - 70) / 30}px)`
                   : "blur(0px)",
                 boxShadow: getBoxShadow(item.id),
                 ...(expandedItem === item.id && {
@@ -1310,8 +1313,8 @@ export default function DesignSystem({
                   borderRadius: 0,
                   zIndex: 50
                 }),
-                ...(item.id === "logo" && centerItem === "logo" && 
-                   typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] === 100 && {
+                ...(item.id === "logo" && centerItem === "logo" &&
+                  typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] === 100 && {
                   width: "40vw",
                   height: "70vh",
                   position: "fixed",
@@ -1323,7 +1326,7 @@ export default function DesignSystem({
                   scale: 1,
                   zIndex: 30
                 }),
-                ...(item.id === centerItem && !expandedItem && centerItem && 
+                ...(item.id === centerItem && !expandedItem && centerItem &&
                   typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] > 0 && {
                   position: "relative",
                   zIndex: 25,
@@ -1332,18 +1335,18 @@ export default function DesignSystem({
               }}
               transition={{
                 // Use tween for smoother, non-bouncy animations
-                type: "tween", 
+                type: "tween",
                 ease: "easeInOut",
                 duration: 0.4,
                 // Only use spring for specific interactions
-                ...(expandedItem === item.id || (expandedItem !== null && expandedItem !== item.id) 
-                  ? { 
-                      type: "spring",
-                      stiffness: 100, // Greatly reduced for stability 
-                      damping: 26,
-                      mass: 1.2,
-                      duration: 0.5,
-                    } 
+                ...(expandedItem === item.id || (expandedItem !== null && expandedItem !== item.id)
+                  ? {
+                    type: "spring",
+                    stiffness: 100, // Greatly reduced for stability 
+                    damping: 26,
+                    mass: 1.2,
+                    duration: 0.5,
+                  }
                   : {}
                 ),
               }}
@@ -1362,140 +1365,187 @@ export default function DesignSystem({
                 color: item.textColor,
               }}
             >
-              <div className="flex justify-between items-center mb-2">
-                <h2 className="text-xl font-bold">{item.title}</h2>
-                {item.id === centerItem && !expandedItem && centerItem && (
-                  <motion.div 
-                    className="text-xs font-semibold px-2 py-1 rounded-full bg-white bg-opacity-20"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                  >
-                    {isExpanding && typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] > 0 
-                      ? `${Math.round(scrollAmount[centerItem])}%` 
-                      : "Scroll to expand"}
-                  </motion.div>
-                )}
-              </div>
-              
+              {item.id === "logo" && centerItem === "logo" &&
+                typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] !== 100 &&
+                <div className="flex justify-between items-center mb-2">
+
+                  <h2 className="text-xl font-bold">{item.title}</h2>
+                  {item.id === centerItem && !expandedItem && centerItem && (
+                    <motion.div
+                      className="text-xs font-semibold px-2 py-1 rounded-full bg-white bg-opacity-20"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                    >
+                      {isExpanding && typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] > 0
+                        ? `${Math.round(scrollAmount[centerItem])}%`
+                        : "Scroll to expand"}
+                    </motion.div>
+                  )}
+                </div>
+              }
+
               {/* Don't animate center box content during expansion */}
-              {(item.id === centerItem) 
+              {(item.id === centerItem)
                 ? (
                   <div className="h-full flex flex-col">
                     {/* Header when logo is fully expanded to 100% */}
-                    {item.id === "logo" && centerItem === "logo" && 
-                     typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] === 100 && (
-                      <div className="w-full mb-4">
-                        <h2 className="text-2xl font-bold text-[#0061FF]">Dropbox Design System</h2>
-                      </div>
-                    )}
-                    
+                    {item.id === "logo" && centerItem === "logo" &&
+                      typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] === 100 && (
+                        // <div className="w-full mb-4">
+                        //   <h2 className="text-2xl font-bold text-[#0061FF]">Dropbox Design System</h2>
+                        // </div>
+                        <div
+                          className="flex items-start p-8 border-gray-200"
+                        // style={styles.contentFade}
+                        >
+                          <h1
+                            className="text-[1.5rem] md:text-[2rem] font-bold leading-[1.15]"
+                            style={{
+                              fontFamily: 'var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                              color: '#0061FF',
+                              fontWeight: 700,
+                            }}
+                          >
+                            At Dropbox, our Brand <br /> Guidelines help us <br /> infuse everything we <br /> make with identity.
+                          </h1>
+                        </div>
+                      )}
+
                     <div className="flex-grow flex items-center justify-center">
-                      {item.id === "logo" ? (
+                      {item.id === "logo" && centerItem === "logo" &&
+                      typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] === 100 ? (
+                        <div></div>
+                      ) : (
+                        // <svg
+                        //   width="120"
+                        //   height="120"
+                        //   viewBox="0 0 120 120"
+                        // >
+                        //   <rect x="20" y="20" width="30" height="30" fill="#0a3d62" />
+                        //   <rect x="70" y="20" width="30" height="30" fill="#0a3d62" />
+                        //   <rect x="45" y="45" width="30" height="30" fill="#0a3d62" />
+                        //   <rect x="20" y="70" width="30" height="30" fill="#0a3d62" />
+                        //   <rect x="70" y="70" width="30" height="30" fill="#0a3d62" />
+                        // </svg>
                         <motion.div
                           className="w-12 h-12 flex items-center justify-center"
                           animate={{
                             scale: 1,
                           }}
-                          transition={{ 
+                          transition={{
                             type: "spring",
                             stiffness: 400,
                             damping: 30,
                             duration: 0.2
                           }}
                         >
-                          <svg 
-                            viewBox="0 0 256 256" 
-                            xmlns="http://www.w3.org/2000/svg" 
+                          <svg
+                            viewBox="0 0 256 256"
+                            xmlns="http://www.w3.org/2000/svg"
                             preserveAspectRatio="xMidYMid"
                             className="w-full h-full"
                           >
                             <path d="M63.246 0L0 41.625l43.766 35.22 64.764-39.812-45.284-37.033zm129.728 0L147.69 37.033l64.762 39.812 43.768-35.22L193.735 0h-.761zm-129.728 115.6L0 74.336l43.766-35.033 64.764 39.626-45.284 36.672zm129.728 0L147.69 73.93l64.762-39.626 43.768 35.032-63.52 41.264zm-65.202 42.627l-45.046-36.848-45.285 36.848 45.285 37.22 45.046-37.22z" fill="#0061FF" />
                           </svg>
                         </motion.div>
-                      ) : (
-                        <svg
-                          width="120"
-                          height="120"
-                          viewBox="0 0 120 120"
-                        >
-                          <rect x="20" y="20" width="30" height="30" fill="#0a3d62" />
-                          <rect x="70" y="20" width="30" height="30" fill="#0a3d62" />
-                          <rect x="45" y="45" width="30" height="30" fill="#0a3d62" />
-                          <rect x="20" y="70" width="30" height="30" fill="#0a3d62" />
-                          <rect x="70" y="70" width="30" height="30" fill="#0a3d62" />
-                        </svg>
                       )}
                     </div>
-                    
+
                     {/* Bottom section with icon and down arrow for logo when fully expanded to 100% */}
-                    {item.id === "logo" && centerItem === "logo" && 
-                     typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] === 100 && (
-                      <div className="w-full mt-4 flex justify-between items-center">
-                        <div className="flex items-center">
-                          <svg 
-                            width="24" 
-                            height="24" 
-                            viewBox="0 0 24 24" 
-                            fill="none" 
-                            stroke="#0061FF" 
-                            strokeWidth="2" 
-                            strokeLinecap="round" 
-                            strokeLinejoin="round"
-                          >
-                            <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                            <path d="M2 17l10 5 10-5" />
-                            <path d="M2 12l10 5 10-5" />
-                          </svg>
-                          <span className="ml-2 text-[#0061FF] font-medium">Design Elements</span>
-                        </div>
-                        <motion.div 
-                          className="flex items-center"
-                          animate={{ y: [0, 5, 0] }}
-                          transition={{ 
-                            duration: 1.5,
-                            repeat: Infinity,
-                            repeatType: "loop"
-                          }}
+                    {item.id === "logo" && centerItem === "logo" &&
+                      typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] === 100 && (
+                        // <div className="w-full mt-4 mb-10 flex justify-between items-center">
+                        //   <div className="flex items-center">
+                        //     <svg
+                        //       width="24"
+                        //       height="24"
+                        //       viewBox="0 0 24 24"
+                        //       fill="none"
+                        //       stroke="#0061FF"
+                        //       strokeWidth="2"
+                        //       strokeLinecap="round"
+                        //       strokeLinejoin="round"
+                        //     >
+                        //       <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                        //       <path d="M2 17l10 5 10-5" />
+                        //       <path d="M2 12l10 5 10-5" />
+                        //     </svg>
+                        //     <span className="ml-2 text-[#0061FF] font-medium">Design Elements</span>
+                        //   </div>
+                        //   <motion.div
+                        //     className="flex items-center"
+                        //     animate={{ y: [0, 5, 0] }}
+                        //     transition={{
+                        //       duration: 1.5,
+                        //       repeat: Infinity,
+                        //       repeatType: "loop"
+                        //     }}
+                        //   >
+                        //     <span className="mr-2 text-[#0061FF] font-medium">Scroll Down</span>
+                        //     <svg
+                        //       width="24"
+                        //       height="24"
+                        //       viewBox="0 0 24 24"
+                        //       fill="none"
+                        //       stroke="#0061FF"
+                        //       strokeWidth="2"
+                        //       strokeLinecap="round"
+                        //       strokeLinejoin="round"
+                        //     >
+                        //       <path d="M12 5v14" />
+                        //       <path d="M19 12l-7 7-7-7" />
+                        //     </svg>
+                        //   </motion.div>
+                        // </div>
+                        <div
+                          className={`py-8 px-16 flex w-full justify-between items-center`}
                         >
-                          <span className="mr-2 text-[#0061FF] font-medium">Scroll Down</span>
-                          <svg 
-                            width="24" 
-                            height="24" 
-                            viewBox="0 0 24 24" 
-                            fill="none" 
-                            stroke="#0061FF" 
-                            strokeWidth="2" 
-                            strokeLinecap="round" 
-                            strokeLinejoin="round"
+                          <div
+                            className={`w-10 h-10 transition-all duration-500 ease-out`}
                           >
-                            <path d="M12 5v14" />
-                            <path d="M19 12l-7 7-7-7" />
-                          </svg>
-                        </motion.div>
-                      </div>
-                    )}
+                            <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid">
+                              <path d="M63.246 0L0 41.625l43.766 35.22 64.764-39.812-45.284-37.033zm129.728 0L147.69 37.033l64.762 39.812 43.768-35.22L193.735 0h-.761zm-129.728 115.6L0 74.336l43.766-35.033 64.764 39.626-45.284 36.672zm129.728 0L147.69 73.93l64.762-39.626 43.768 35.032-63.52 41.264zm-65.202 42.627l-45.046-36.848-45.285 36.848 45.285 37.22 45.046-37.22z" fill="#0061FF" />
+                            </svg>
+                          </div>
+
+                          {/* <div className="h2">Nikhil</div> */}
+
+                          <div
+                            className="w-9 h-9"
+                            style={{
+                              opacity: Math.max(0, 1 - scrollProgress * 3),
+                              transition: 'opacity 0.3s ease-out',
+                              display: 'block'
+                            }}
+                          >
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M6 9l6 6 6-6" stroke="#0061FF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          </div>
+                        </div>
+                      )}
                   </div>
                 )
-                : ((!centerItem || typeof scrollAmount[centerItem] !== 'number' || scrollAmount[centerItem] === 0) 
-                  ? item.content 
+                : ((!centerItem || typeof scrollAmount[centerItem] !== 'number' || scrollAmount[centerItem] === 0)
+                  ? item.content
                   : <div className="h-full flex items-center justify-center">{item.content}</div>
                 )
               }
-              
+
               <AnimatePresence>
                 {expandedItem === item.id && (
                   <motion.div
                     className="absolute inset-0 p-8 bg-opacity-100 overflow-auto"
                     initial={{ opacity: 0 }}
-                    animate={{ 
+                    animate={{
                       opacity: 1,
                       // Use the scroll amount to calculate the content visibility
                       scale: Math.min(1, (scrollAmount[item.id] || 0) / 100),
                     }}
                     exit={{ opacity: 0, scale: 0.9 }}
-                    transition={{ 
-                      type: "spring", 
-                      stiffness: 300, 
+                    transition={{
+                      type: "spring",
+                      stiffness: 300,
                       damping: 30,
                       // Add a slight delay to the content appearing
                       delay: 0.1
@@ -1511,14 +1561,14 @@ export default function DesignSystem({
                           <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(65,182,255,0.3)" strokeWidth="1" />
                         </pattern>
                         <rect width="100%" height="100%" fill="url(#expandedGrid)" />
-                        
+
                         <pattern id="expandedLargeGrid" width="120" height="120" patternUnits="userSpaceOnUse">
                           <path d="M 120 0 L 0 0 0 120" fill="none" stroke="rgba(65,182,255,0.4)" strokeWidth="1.5" />
                         </pattern>
                         <rect width="100%" height="100%" fill="url(#expandedLargeGrid)" />
                       </svg>
                     </div>
-                    
+
                     <div className="max-w-6xl mx-auto relative z-10">
                       <div className="flex justify-between items-center mb-8 pt-6">
                         <h1 className="text-4xl font-bold">{item.title}</h1>
@@ -1534,13 +1584,13 @@ export default function DesignSystem({
                           Close
                         </motion.button>
                       </div>
-                      
+
                       {/* Only display content when scroll amount is at least 80% */}
                       {(scrollAmount[item.id] || 0) > 80 && (
-                        <motion.div 
+                        <motion.div
                           className="grid grid-cols-1 md:grid-cols-12 gap-8 pb-16"
                           initial={{ opacity: 0 }}
-                          animate={{ 
+                          animate={{
                             opacity: ((scrollAmount[item.id] || 0) - 80) / 20, // Fade in from 80% to 100%
                           }}
                           transition={{ duration: 0.3 }}
@@ -1562,7 +1612,7 @@ export default function DesignSystem({
                                 {item.expandedContent}
                               </div>
                             </section>
-                          
+
                             <section className="bg-white bg-opacity-10 backdrop-blur-sm p-8 rounded-2xl shadow-lg">
                               <h2 className="text-2xl font-medium mb-6 flex items-center">
                                 <span className="bg-white bg-opacity-20 p-2 rounded-lg mr-3">
@@ -1611,7 +1661,7 @@ export default function DesignSystem({
                               </div>
                             </section>
                           </div>
-                          
+
                           <div className="md:col-span-4 space-y-8">
                             <section className="bg-white bg-opacity-10 backdrop-blur-sm p-8 rounded-2xl shadow-lg">
                               <h2 className="text-2xl font-medium mb-6 flex items-center">
@@ -1660,7 +1710,7 @@ export default function DesignSystem({
                                 </li>
                               </ul>
                             </section>
-                            
+
                             <section className="bg-white bg-opacity-10 backdrop-blur-sm p-8 rounded-2xl shadow-lg">
                               <h2 className="text-2xl font-medium mb-6 flex items-center">
                                 <span className="bg-white bg-opacity-20 p-2 rounded-lg mr-3">
@@ -1689,7 +1739,7 @@ export default function DesignSystem({
         })}
       </div>
 
-      
+
     </div>
   )
 }
