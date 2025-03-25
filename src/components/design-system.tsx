@@ -85,21 +85,26 @@ export default function DesignSystem({
     
     e.preventDefault() // Prevent default scroll behavior
 
+    // Only allow scrolling to start changing the UI after a deliberate action
+    // This prevents accidental expansion on initial scroll
+    if (!isExpanding && e.deltaY > 0) {
+      setIsExpanding(true)
+      return
+    } else if (!isExpanding && e.deltaY < 0) {
+      // If not expanding and trying to scroll up, do nothing
+      return
+    }
+
     // Update scroll amount for the center item with more stable increments
     setScrollAmount((prev) => {
       const currentAmount = prev[centerItem] || 0
       // Use smaller increment for smoother expansion
-      const increment = 1.5
+      const increment = 0.8 // Reduced for even smoother scrolling
       const newAmount = Math.max(0, Math.min(100, currentAmount + (e.deltaY > 0 ? increment : -increment)))
 
-      // Only set expanding state when we reach threshold values
-      if (newAmount >= 95 && !isExpanding) {
-        setIsExpanding(true)
-        setTimeout(() => {
-          setExpandedItem(centerItem)
-          setIsExpanding(false)
-        }, 200)
-      } else if (newAmount <= 5 && isExpanding) {
+      // We no longer set expandedItem when reaching 100%
+      // We just let the visual expansion happen without showing the detailed content
+      if (newAmount <= 5 && isExpanding) {
         setIsExpanding(false)
       }
 
@@ -121,7 +126,7 @@ export default function DesignSystem({
             [centerItem]: 0
           }))
         }
-      }, 200)
+      }, 400) // Increased for more stability
 
       return {
         ...prev,
@@ -132,7 +137,7 @@ export default function DesignSystem({
 
   // Handle click to toggle expanded state with improved stability
   const handleClick = (item: string) => {
-    if (isExpanding) return // Prevent clicks during expansion
+    if (isExpanding && item !== centerItem) return // Prevent clicks on other items during expansion
 
     if (expandedItem === item) {
       // Smooth retraction animation
@@ -144,14 +149,30 @@ export default function DesignSystem({
       setTimeout(() => {
         setExpandedItem(null)
       }, 300)
+    } else if (item === centerItem && scrollAmount[centerItem] === 100) {
+      // If we click on the already maximally expanded center item, we bring it back to 0
+      setScrollAmount(prev => ({
+        ...prev,
+        [item]: 0
+      }))
+    } else if (item === centerItem && !isExpanding) {
+      // If clicking on the center item when not expanding, initiate expansion
+      setIsExpanding(true)
+      setScrollAmount(prev => ({
+        ...prev,
+        [item]: 1 // Set to a small value to start expansion
+      }))
     } else {
-      // Set scroll amount to 100 for clean expansion
+      // For other items, we expand to 100 but not show the expanded content
       setScrollAmount(prev => ({
         ...prev,
         [item]: 100
       }))
       
-      setExpandedItem(item)
+      // Only set expandedItem if it's a deliberate click, not from scrolling to 100%
+      if (item !== centerItem || (item === centerItem && scrollAmount[centerItem] !== 100)) {
+        setExpandedItem(item)
+      }
     }
   }
 
@@ -179,14 +200,7 @@ export default function DesignSystem({
     // When an item is fully expanded, make other items completely invisible
     if (expandedItem && expandedItem !== item) return 0
     
-    // Fade out non-center items during expansion
-    if (item !== centerItem && centerItem && 
-        typeof scrollAmount[centerItem] === 'number' && 
-        scrollAmount[centerItem] > 0) {
-      // Simple linear fade based on scroll amount
-      return Math.max(0.2, 1 - (scrollAmount[centerItem] / 100) * 0.8)
-    }
-    
+    // Always maintain 100% opacity during expansion
     return 1
   }
 
@@ -1174,26 +1188,27 @@ export default function DesignSystem({
             ? (() => {
                 if (item.id === centerItem) return { x: 0, y: 0 };
                 
-                // Use exponential factor to make boxes move faster as they get further
-                const moveOutFactor = Math.pow(scrollAmount[centerItem] / 100, 1.1) * 220;
+                // Use a completely linear movement to eliminate shaking
+                // Increase factor to ensure items move completely outside viewport when fully expanded
+                const moveOutFactor = (scrollAmount[centerItem] / 100) * 500;
                 
-                // Explicitly use the id as a string to avoid TypeScript errors
+                // Fixed positions with equal distances
                 const id = item.id;
                 switch(id) {
                   case "framework": // top-left
                     return { x: -moveOutFactor, y: -moveOutFactor };
                   case "voice": // top-center
-                    return { x: 0, y: -moveOutFactor * 1.1 };
+                    return { x: 0, y: -moveOutFactor };
                   case "typography": // top-right
                     return { x: moveOutFactor, y: -moveOutFactor };
                   case "color": // middle-left
-                    return { x: -moveOutFactor * 1.1, y: 0 };
+                    return { x: -moveOutFactor, y: 0 };
                   case "iconography": // middle-right
-                    return { x: moveOutFactor * 1.1, y: 0 };
+                    return { x: moveOutFactor, y: 0 };
                   case "imagery": // bottom-left
                     return { x: -moveOutFactor, y: moveOutFactor };
                   case "motion": // bottom-center
-                    return { x: 0, y: moveOutFactor * 1.1 };
+                    return { x: 0, y: moveOutFactor };
                   default: // bottom-right
                     return { x: moveOutFactor, y: moveOutFactor };
                 }
@@ -1220,16 +1235,14 @@ export default function DesignSystem({
                 x: positionOffset.x + initialLogoPosition.x,
                 y: positionOffset.y + initialLogoPosition.y,
                 zIndex: getZIndex(item.id),
-                backgroundColor: item.bgColor, // Keep original background color
-                color: item.textColor, // Keep original text color 
-                // Simplified blur effect
+                backgroundColor: item.bgColor,
+                color: item.textColor,
                 filter: item.id !== centerItem && centerItem && 
                        typeof scrollAmount[centerItem] === 'number' && 
                        scrollAmount[centerItem] > 70 
                   ? `blur(${(scrollAmount[centerItem] - 70) / 30}px)` 
                   : "blur(0px)",
                 boxShadow: getBoxShadow(item.id),
-                // Fixed expanded state properties
                 ...(expandedItem === item.id && {
                   position: "fixed",
                   top: 0,
@@ -1243,7 +1256,6 @@ export default function DesignSystem({
                   borderRadius: 0,
                   zIndex: 50
                 }),
-                // Simplified intermediate expansion for center item
                 ...(item.id === centerItem && !expandedItem && centerItem && 
                   typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] > 0 && {
                   position: "relative",
@@ -1252,16 +1264,23 @@ export default function DesignSystem({
                 }),
               }}
               transition={{
-                type: "spring",
-                stiffness: 300,
-                damping: 25,
-                // Make expanded/contracted state more stable with slower transitions
+                // Use tween for smoother, non-bouncy animations
+                type: "tween", 
+                ease: "easeInOut",
+                duration: 0.4,
+                // Only use spring for specific interactions
                 ...(expandedItem === item.id || (expandedItem !== null && expandedItem !== item.id) 
-                  ? { duration: 0.4 }
+                  ? { 
+                      type: "spring",
+                      stiffness: 100, // Greatly reduced for stability 
+                      damping: 26,
+                      mass: 1.2,
+                      duration: 0.5,
+                    } 
                   : {}
                 ),
               }}
-              layout="preserve-aspect"
+              layout={false} // Remove layout animation which can cause shaking
               onWheel={(e) => {
                 // Only handle wheel events on center item or container
                 if (item.id === centerItem && !expandedItem) {
@@ -1284,7 +1303,7 @@ export default function DesignSystem({
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                   >
-                    {typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] > 0 
+                    {isExpanding && typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] > 0 
                       ? `${Math.round(scrollAmount[centerItem])}%` 
                       : "Scroll to expand"}
                   </motion.div>
@@ -1334,7 +1353,7 @@ export default function DesignSystem({
                 )
                 : ((!centerItem || typeof scrollAmount[centerItem] !== 'number' || scrollAmount[centerItem] === 0) 
                   ? item.content 
-                  : <div className="h-full flex items-center justify-center opacity-80">{item.content}</div>
+                  : <div className="h-full flex items-center justify-center">{item.content}</div>
                 )
               }
               
