@@ -163,15 +163,33 @@ export default function DesignSystem({
         [item]: 1 // Set to a small value to start expansion
       }))
     } else {
-      // For other items, we expand to 100 but not show the expanded content
+      // For other items, we expand to 100 but not show the expanded content immediately
       setScrollAmount(prev => ({
         ...prev,
-        [item]: 100
+        [item]: 20 // Start at 20% to begin the expansion animation
       }))
       
       // Only set expandedItem if it's a deliberate click, not from scrolling to 100%
+      // We now delay setting the expandedItem to allow for smoother expansion
       if (item !== centerItem || (item === centerItem && scrollAmount[centerItem] !== 100)) {
-        setExpandedItem(item)
+        // Gradually increase the scroll amount to 100% for smooth expansion
+        const expandInterval = setInterval(() => {
+          setScrollAmount(prev => {
+            const currAmount = prev[item] || 0;
+            const newAmount = Math.min(100, currAmount + 5); // Increment by 5% each step
+            
+            // Once we reach 100%, set the expanded item
+            if (newAmount === 100) {
+              clearInterval(expandInterval);
+              setExpandedItem(item);
+            }
+            
+            return {
+              ...prev,
+              [item]: newAmount
+            };
+          });
+        }, 25); // Update every 25ms for smooth animation
       }
     }
   }
@@ -200,7 +218,15 @@ export default function DesignSystem({
     // When an item is fully expanded, make other items completely invisible
     if (expandedItem && expandedItem !== item) return 0
     
-    // Always maintain 100% opacity during expansion
+    // Start fading out only in final 10% of expansion
+    if (item !== centerItem && centerItem && 
+        typeof scrollAmount[centerItem] === 'number' && 
+        scrollAmount[centerItem] > 90) {
+      // Fade out in the last 10% of expansion (from 90% to 100%)
+      return 1 - ((scrollAmount[centerItem] - 90) / 10)
+    }
+    
+    // Otherwise maintain full opacity
     return 1
   }
 
@@ -225,6 +251,21 @@ export default function DesignSystem({
     if (item === centerItem) return 20
     if (item === hoveredItem) return 10
     return 1
+  }
+
+  // Get logo box custom dimensions when fully expanded to 100%
+  const getLogoBoxDimensions = (item: string) => {
+    if (item === "logo" && centerItem === "logo" && scrollAmount[centerItem] === 100) {
+      return {
+        width: "40vw",
+        height: "70vh",
+        position: "fixed" as const,
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)"
+      }
+    }
+    return {}
   }
 
   // Calculate initial position for entrance animation based on item position and scrollProgress
@@ -1189,8 +1230,21 @@ export default function DesignSystem({
                 if (item.id === centerItem) return { x: 0, y: 0 };
                 
                 // Use a completely linear movement to eliminate shaking
-                // Increase factor to ensure items move completely outside viewport when fully expanded
-                const moveOutFactor = (scrollAmount[centerItem] / 100) * 500;
+                // Start with minimal movement, then accelerate at the end
+                let moveOutFactor = 0;
+                
+                // Use a non-linear curve for movement:
+                // - Move slowly up to 80% expansion
+                // - Move quickly from 80% to 100% to ensure full exit
+                if (scrollAmount[centerItem] <= 80) {
+                  // Slow movement phase (0-80%)
+                  moveOutFactor = (scrollAmount[centerItem] / 100) * 200; // Small factor for initial movement
+                } else {
+                  // Fast exit phase (80-100%)
+                  // Map 80-100% to 0-100% and apply to a larger range
+                  const exitProgress = (scrollAmount[centerItem] - 80) / 20;
+                  moveOutFactor = 200 + (exitProgress * 3000); // Dramatically increase for complete exit
+                }
                 
                 // Fixed positions with equal distances
                 const id = item.id;
@@ -1256,6 +1310,19 @@ export default function DesignSystem({
                   borderRadius: 0,
                   zIndex: 50
                 }),
+                ...(item.id === "logo" && centerItem === "logo" && 
+                   typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] === 100 && {
+                  width: "40vw",
+                  height: "70vh",
+                  position: "fixed",
+                  top: "50%",
+                  left: "50%",
+                  x: "-50%",
+                  y: "-50%",
+                  borderRadius: "1rem",
+                  scale: 1,
+                  zIndex: 30
+                }),
                 ...(item.id === centerItem && !expandedItem && centerItem && 
                   typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] > 0 && {
                   position: "relative",
@@ -1313,41 +1380,99 @@ export default function DesignSystem({
               {/* Don't animate center box content during expansion */}
               {(item.id === centerItem) 
                 ? (
-                  <div className="h-full flex items-center justify-center">
-                    {item.id === "logo" ? (
-                      <motion.div
-                        className="w-12 h-12 flex items-center justify-center"
-                        animate={{
-                          scale: 1,
-                        }}
-                        transition={{ 
-                          type: "spring",
-                          stiffness: 400,
-                          damping: 30,
-                          duration: 0.2
-                        }}
-                      >
-                        <svg 
-                          viewBox="0 0 256 256" 
-                          xmlns="http://www.w3.org/2000/svg" 
-                          preserveAspectRatio="xMidYMid"
-                          className="w-full h-full"
+                  <div className="h-full flex flex-col">
+                    {/* Header when logo is fully expanded to 100% */}
+                    {item.id === "logo" && centerItem === "logo" && 
+                     typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] === 100 && (
+                      <div className="w-full mb-4">
+                        <h2 className="text-2xl font-bold text-[#0061FF]">Dropbox Design System</h2>
+                      </div>
+                    )}
+                    
+                    <div className="flex-grow flex items-center justify-center">
+                      {item.id === "logo" ? (
+                        <motion.div
+                          className="w-12 h-12 flex items-center justify-center"
+                          animate={{
+                            scale: 1,
+                          }}
+                          transition={{ 
+                            type: "spring",
+                            stiffness: 400,
+                            damping: 30,
+                            duration: 0.2
+                          }}
                         >
-                          <path d="M63.246 0L0 41.625l43.766 35.22 64.764-39.812-45.284-37.033zm129.728 0L147.69 37.033l64.762 39.812 43.768-35.22L193.735 0h-.761zm-129.728 115.6L0 74.336l43.766-35.033 64.764 39.626-45.284 36.672zm129.728 0L147.69 73.93l64.762-39.626 43.768 35.032-63.52 41.264zm-65.202 42.627l-45.046-36.848-45.285 36.848 45.285 37.22 45.046-37.22z" fill="#0061FF" />
+                          <svg 
+                            viewBox="0 0 256 256" 
+                            xmlns="http://www.w3.org/2000/svg" 
+                            preserveAspectRatio="xMidYMid"
+                            className="w-full h-full"
+                          >
+                            <path d="M63.246 0L0 41.625l43.766 35.22 64.764-39.812-45.284-37.033zm129.728 0L147.69 37.033l64.762 39.812 43.768-35.22L193.735 0h-.761zm-129.728 115.6L0 74.336l43.766-35.033 64.764 39.626-45.284 36.672zm129.728 0L147.69 73.93l64.762-39.626 43.768 35.032-63.52 41.264zm-65.202 42.627l-45.046-36.848-45.285 36.848 45.285 37.22 45.046-37.22z" fill="#0061FF" />
+                          </svg>
+                        </motion.div>
+                      ) : (
+                        <svg
+                          width="120"
+                          height="120"
+                          viewBox="0 0 120 120"
+                        >
+                          <rect x="20" y="20" width="30" height="30" fill="#0a3d62" />
+                          <rect x="70" y="20" width="30" height="30" fill="#0a3d62" />
+                          <rect x="45" y="45" width="30" height="30" fill="#0a3d62" />
+                          <rect x="20" y="70" width="30" height="30" fill="#0a3d62" />
+                          <rect x="70" y="70" width="30" height="30" fill="#0a3d62" />
                         </svg>
-                      </motion.div>
-                    ) : (
-                      <svg
-                        width="120"
-                        height="120"
-                        viewBox="0 0 120 120"
-                      >
-                        <rect x="20" y="20" width="30" height="30" fill="#0a3d62" />
-                        <rect x="70" y="20" width="30" height="30" fill="#0a3d62" />
-                        <rect x="45" y="45" width="30" height="30" fill="#0a3d62" />
-                        <rect x="20" y="70" width="30" height="30" fill="#0a3d62" />
-                        <rect x="70" y="70" width="30" height="30" fill="#0a3d62" />
-                      </svg>
+                      )}
+                    </div>
+                    
+                    {/* Bottom section with icon and down arrow for logo when fully expanded to 100% */}
+                    {item.id === "logo" && centerItem === "logo" && 
+                     typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] === 100 && (
+                      <div className="w-full mt-4 flex justify-between items-center">
+                        <div className="flex items-center">
+                          <svg 
+                            width="24" 
+                            height="24" 
+                            viewBox="0 0 24 24" 
+                            fill="none" 
+                            stroke="#0061FF" 
+                            strokeWidth="2" 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round"
+                          >
+                            <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                            <path d="M2 17l10 5 10-5" />
+                            <path d="M2 12l10 5 10-5" />
+                          </svg>
+                          <span className="ml-2 text-[#0061FF] font-medium">Design Elements</span>
+                        </div>
+                        <motion.div 
+                          className="flex items-center"
+                          animate={{ y: [0, 5, 0] }}
+                          transition={{ 
+                            duration: 1.5,
+                            repeat: Infinity,
+                            repeatType: "loop"
+                          }}
+                        >
+                          <span className="mr-2 text-[#0061FF] font-medium">Scroll Down</span>
+                          <svg 
+                            width="24" 
+                            height="24" 
+                            viewBox="0 0 24 24" 
+                            fill="none" 
+                            stroke="#0061FF" 
+                            strokeWidth="2" 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round"
+                          >
+                            <path d="M12 5v14" />
+                            <path d="M19 12l-7 7-7-7" />
+                          </svg>
+                        </motion.div>
+                      </div>
                     )}
                   </div>
                 )
@@ -1362,9 +1487,19 @@ export default function DesignSystem({
                   <motion.div
                     className="absolute inset-0 p-8 bg-opacity-100 overflow-auto"
                     initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    animate={{ 
+                      opacity: 1,
+                      // Use the scroll amount to calculate the content visibility
+                      scale: Math.min(1, (scrollAmount[item.id] || 0) / 100),
+                    }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ 
+                      type: "spring", 
+                      stiffness: 300, 
+                      damping: 30,
+                      // Add a slight delay to the content appearing
+                      delay: 0.1
+                    }}
                     style={{
                       backgroundColor: item.bgColor, // Keep original background color
                     }}
@@ -1400,141 +1535,151 @@ export default function DesignSystem({
                         </motion.button>
                       </div>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-12 gap-8 pb-16">
-                        {/* Enhanced expandedContent with sections */}
-                        <div className="md:col-span-8 space-y-8">
-                          <section className="bg-white bg-opacity-10 backdrop-blur-sm p-8 rounded-2xl shadow-lg">
-                            <h2 className="text-2xl font-medium mb-6 flex items-center">
-                              <span className="bg-white bg-opacity-20 p-2 rounded-lg mr-3">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <circle cx="12" cy="12" r="10"></circle>
-                                  <line x1="12" y1="8" x2="12" y2="16"></line>
-                                  <line x1="8" y1="12" x2="16" y2="12"></line>
-                                </svg>
-                              </span>
-                              Overview
-                            </h2>
-                            <div className="prose prose-lg">
-                              {item.expandedContent}
-                            </div>
-                          </section>
+                      {/* Only display content when scroll amount is at least 80% */}
+                      {(scrollAmount[item.id] || 0) > 80 && (
+                        <motion.div 
+                          className="grid grid-cols-1 md:grid-cols-12 gap-8 pb-16"
+                          initial={{ opacity: 0 }}
+                          animate={{ 
+                            opacity: ((scrollAmount[item.id] || 0) - 80) / 20, // Fade in from 80% to 100%
+                          }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          {/* Enhanced expandedContent with sections */}
+                          <div className="md:col-span-8 space-y-8">
+                            <section className="bg-white bg-opacity-10 backdrop-blur-sm p-8 rounded-2xl shadow-lg">
+                              <h2 className="text-2xl font-medium mb-6 flex items-center">
+                                <span className="bg-white bg-opacity-20 p-2 rounded-lg mr-3">
+                                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="8" x2="12" y2="16"></line>
+                                    <line x1="8" y1="12" x2="16" y2="12"></line>
+                                  </svg>
+                                </span>
+                                Overview
+                              </h2>
+                              <div className="prose prose-lg">
+                                {item.expandedContent}
+                              </div>
+                            </section>
                           
-                          <section className="bg-white bg-opacity-10 backdrop-blur-sm p-8 rounded-2xl shadow-lg">
-                            <h2 className="text-2xl font-medium mb-6 flex items-center">
-                              <span className="bg-white bg-opacity-20 p-2 rounded-lg mr-3">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <rect x="3" y="3" width="18" height="18" rx="2"></rect>
-                                  <path d="M3 9h18"></path>
-                                  <path d="M9 21V9"></path>
-                                </svg>
-                              </span>
-                              Best Practices
-                            </h2>
-                            <div className="space-y-4">
-                              <div className="flex items-start">
-                                <div className="bg-white bg-opacity-20 p-2 rounded-full mr-4 mt-1">
-                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <polyline points="20 6 9 17 4 12"></polyline>
+                            <section className="bg-white bg-opacity-10 backdrop-blur-sm p-8 rounded-2xl shadow-lg">
+                              <h2 className="text-2xl font-medium mb-6 flex items-center">
+                                <span className="bg-white bg-opacity-20 p-2 rounded-lg mr-3">
+                                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                                    <path d="M3 9h18"></path>
+                                    <path d="M9 21V9"></path>
                                   </svg>
+                                </span>
+                                Best Practices
+                              </h2>
+                              <div className="space-y-4">
+                                <div className="flex items-start">
+                                  <div className="bg-white bg-opacity-20 p-2 rounded-full mr-4 mt-1">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                  </div>
+                                  <div>
+                                    <h3 className="font-medium text-lg">Consistency is Key</h3>
+                                    <p>Maintain consistency across all touchpoints to build a coherent experience.</p>
+                                  </div>
                                 </div>
-                                <div>
-                                  <h3 className="font-medium text-lg">Consistency is Key</h3>
-                                  <p>Maintain consistency across all touchpoints to build a coherent experience.</p>
+                                <div className="flex items-start">
+                                  <div className="bg-white bg-opacity-20 p-2 rounded-full mr-4 mt-1">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                  </div>
+                                  <div>
+                                    <h3 className="font-medium text-lg">Less is More</h3>
+                                    <p>Focus on simplicity and clarity rather than complexity and clutter.</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-start">
+                                  <div className="bg-white bg-opacity-20 p-2 rounded-full mr-4 mt-1">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                  </div>
+                                  <div>
+                                    <h3 className="font-medium text-lg">Test and Iterate</h3>
+                                    <p>Regularly test with users and refine based on their feedback.</p>
+                                  </div>
                                 </div>
                               </div>
-                              <div className="flex items-start">
-                                <div className="bg-white bg-opacity-20 p-2 rounded-full mr-4 mt-1">
-                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <polyline points="20 6 9 17 4 12"></polyline>
-                                  </svg>
-                                </div>
-                                <div>
-                                  <h3 className="font-medium text-lg">Less is More</h3>
-                                  <p>Focus on simplicity and clarity rather than complexity and clutter.</p>
-                                </div>
-                              </div>
-                              <div className="flex items-start">
-                                <div className="bg-white bg-opacity-20 p-2 rounded-full mr-4 mt-1">
-                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <polyline points="20 6 9 17 4 12"></polyline>
-                                  </svg>
-                                </div>
-                                <div>
-                                  <h3 className="font-medium text-lg">Test and Iterate</h3>
-                                  <p>Regularly test with users and refine based on their feedback.</p>
-                                </div>
-                              </div>
-                            </div>
-                          </section>
-                        </div>
-                        
-                        <div className="md:col-span-4 space-y-8">
-                          <section className="bg-white bg-opacity-10 backdrop-blur-sm p-8 rounded-2xl shadow-lg">
-                            <h2 className="text-2xl font-medium mb-6 flex items-center">
-                              <span className="bg-white bg-opacity-20 p-2 rounded-lg mr-3">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
-                                  <polyline points="14 2 14 8 20 8"></polyline>
-                                </svg>
-                              </span>
-                              Resources
-                            </h2>
-                            <ul className="space-y-3">
-                              <li>
-                                <a href="#" className="flex items-center p-3 bg-white bg-opacity-10 rounded-lg hover:bg-opacity-20 transition-colors">
-                                  <span className="bg-white bg-opacity-20 p-2 rounded-lg mr-3">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                      <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
-                                      <polyline points="13 2 13 9 20 9"></polyline>
-                                    </svg>
-                                  </span>
-                                  <span>Documentation</span>
-                                </a>
-                              </li>
-                              <li>
-                                <a href="#" className="flex items-center p-3 bg-white bg-opacity-10 rounded-lg hover:bg-opacity-20 transition-colors">
-                                  <span className="bg-white bg-opacity-20 p-2 rounded-lg mr-3">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                      <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
-                                      <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
-                                      <path d="M2 2l7.586 7.586"></path>
-                                      <circle cx="11" cy="11" r="2"></circle>
-                                    </svg>
-                                  </span>
-                                  <span>Sketch Files</span>
-                                </a>
-                              </li>
-                              <li>
-                                <a href="#" className="flex items-center p-3 bg-white bg-opacity-10 rounded-lg hover:bg-opacity-20 transition-colors">
-                                  <span className="bg-white bg-opacity-20 p-2 rounded-lg mr-3">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                                    </svg>
-                                  </span>
-                                  <span>Examples</span>
-                                </a>
-                              </li>
-                            </ul>
-                          </section>
+                            </section>
+                          </div>
                           
-                          <section className="bg-white bg-opacity-10 backdrop-blur-sm p-8 rounded-2xl shadow-lg">
-                            <h2 className="text-2xl font-medium mb-6 flex items-center">
-                              <span className="bg-white bg-opacity-20 p-2 rounded-lg mr-3">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <circle cx="12" cy="12" r="10"></circle>
-                                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                                </svg>
-                              </span>
-                              Need Help?
-                            </h2>
-                            <p className="mb-4">Have questions about implementing this in your project?</p>
-                            <button className="w-full py-3 bg-white bg-opacity-20 rounded-lg hover:bg-opacity-30 transition-colors">
-                              Contact Support
-                            </button>
-                          </section>
-                        </div>
-                      </div>
+                          <div className="md:col-span-4 space-y-8">
+                            <section className="bg-white bg-opacity-10 backdrop-blur-sm p-8 rounded-2xl shadow-lg">
+                              <h2 className="text-2xl font-medium mb-6 flex items-center">
+                                <span className="bg-white bg-opacity-20 p-2 rounded-lg mr-3">
+                                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                  </svg>
+                                </span>
+                                Resources
+                              </h2>
+                              <ul className="space-y-3">
+                                <li>
+                                  <a href="#" className="flex items-center p-3 bg-white bg-opacity-10 rounded-lg hover:bg-opacity-20 transition-colors">
+                                    <span className="bg-white bg-opacity-20 p-2 rounded-lg mr-3">
+                                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                                        <polyline points="13 2 13 9 20 9"></polyline>
+                                      </svg>
+                                    </span>
+                                    <span>Documentation</span>
+                                  </a>
+                                </li>
+                                <li>
+                                  <a href="#" className="flex items-center p-3 bg-white bg-opacity-10 rounded-lg hover:bg-opacity-20 transition-colors">
+                                    <span className="bg-white bg-opacity-20 p-2 rounded-lg mr-3">
+                                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
+                                        <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
+                                        <path d="M2 2l7.586 7.586"></path>
+                                        <circle cx="11" cy="11" r="2"></circle>
+                                      </svg>
+                                    </span>
+                                    <span>Sketch Files</span>
+                                  </a>
+                                </li>
+                                <li>
+                                  <a href="#" className="flex items-center p-3 bg-white bg-opacity-10 rounded-lg hover:bg-opacity-20 transition-colors">
+                                    <span className="bg-white bg-opacity-20 p-2 rounded-lg mr-3">
+                                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                      </svg>
+                                    </span>
+                                    <span>Examples</span>
+                                  </a>
+                                </li>
+                              </ul>
+                            </section>
+                            
+                            <section className="bg-white bg-opacity-10 backdrop-blur-sm p-8 rounded-2xl shadow-lg">
+                              <h2 className="text-2xl font-medium mb-6 flex items-center">
+                                <span className="bg-white bg-opacity-20 p-2 rounded-lg mr-3">
+                                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                                  </svg>
+                                </span>
+                                Need Help?
+                              </h2>
+                              <p className="mb-4">Have questions about implementing this in your project?</p>
+                              <button className="w-full py-3 bg-white bg-opacity-20 rounded-lg hover:bg-opacity-30 transition-colors">
+                                Contact Support
+                              </button>
+                            </section>
+                          </div>
+                        </motion.div>
+                      )}
                     </div>
                   </motion.div>
                 )}
