@@ -4,6 +4,25 @@ import React from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import type { DesignSystemItem as DesignSystemItemType } from "./types"
 
+// Helper function to adjust color brightness for gradients
+const adjustColorBrightness = (hexColor: string, percent: number): string => {
+  // Remove the # if present
+  hexColor = hexColor.replace('#', '');
+  
+  // Parse the hex values
+  let r = parseInt(hexColor.substr(0, 2), 16);
+  let g = parseInt(hexColor.substr(2, 2), 16);
+  let b = parseInt(hexColor.substr(4, 2), 16);
+  
+  // Adjust brightness
+  r = Math.min(255, Math.max(0, r + percent));
+  g = Math.min(255, Math.max(0, g + percent));
+  b = Math.min(255, Math.max(0, b + percent));
+  
+  // Convert back to hex
+  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+};
+
 interface DesignSystemItemProps {
   item: DesignSystemItemType
   isCenter: boolean
@@ -68,7 +87,7 @@ export function DesignSystemItem({
 
   return (
     <motion.div
-      className={`bg-[${item.bgColor}] text-[${item.textColor}] p-4 overflow-hidden relative rounded-xl shadow-lg ${gridPosition}`}
+      className={`overflow-hidden relative rounded-xl shadow-lg ${gridPosition}`}
       initial={entranceAnimation ? {
         opacity: getEntranceOpacity(item.id),
         scale: getEntranceScale(item.id),
@@ -81,7 +100,6 @@ export function DesignSystemItem({
         x: item.id === "logo" ? positionOffset.x : positionOffset.x + initialLogoPosition.x,
         y: item.id === "logo" ? positionOffset.y : positionOffset.y + initialLogoPosition.y,
         zIndex: getZIndex(item.id),
-        backgroundColor: item.bgColor,
         color: item.textColor,
         filter: item.id !== centerItem && centerItem &&
           typeof scrollAmount[centerItem] === 'number' &&
@@ -104,8 +122,8 @@ export function DesignSystemItem({
         }),
         ...(item.id === "logo" && centerItem === "logo" &&
           typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] === 100 && {
-          width: "40vw",
-          height: "70vh",
+          width: "30vw",
+          height: "30vw",
           position: "fixed",
           top: "50%",
           left: "50%",
@@ -124,31 +142,37 @@ export function DesignSystemItem({
         }),
       }}
       transition={{
-        // Use tween for smoother, non-bouncy animations
         type: "tween",
         ease: "easeInOut",
         duration: 0.4,
-        // Only use spring for specific interactions
         ...(isExpanded || (isExpanded !== true && centerItem !== null && centerItem !== item.id)
           ? {
             type: "spring",
-            stiffness: 80, // Further reduced for better stability
-            damping: 30, // Increased damping for less oscillation
+            stiffness: 80,
+            damping: 30,
             mass: 1.2,
             duration: 0.5,
           }
           : {}
         ),
       }}
-      layout={false} // Remove layout animation which can cause shaking
+      layout={false}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       onClick={onClick}
       style={{
-        backgroundColor: item.bgColor,
+        background: item.id === "logo" 
+          ? item.bgColor 
+          : `linear-gradient(135deg, ${item.bgColor}, ${adjustColorBrightness(item.bgColor, -20)})`,
         color: item.textColor,
+        border: `1px solid rgba(255, 255, 255, ${isHovered ? '0.2' : '0.1'})`,
+        boxShadow: isHovered 
+          ? `0 10px 30px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 1px 0 0 rgba(255, 255, 255, 0.2)` 
+          : `0 4px 20px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.05), inset 0 1px 0 0 rgba(255, 255, 255, 0.1)`,
+        padding: "1rem",
         ...(item.id === "logo" && {
-          transformOrigin: "center center" // Ensure logo scales from center
+          transformOrigin: "center center",
+          background: item.bgColor,
         }),
       }}
     >
@@ -158,7 +182,7 @@ export function DesignSystemItem({
           <h2 className="text-xl font-bold">{item.title}</h2>
           {isCenter && !isExpanded && centerItem && (
             <motion.div
-              className="text-xs font-semibold px-2 py-1 rounded-full bg-white bg-opacity-20"
+              className="text-xs font-semibold px-2 py-1 rounded-full bg-white bg-opacity-20 backdrop-blur-md"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
             >
@@ -196,30 +220,30 @@ export function DesignSystemItem({
             <div className="flex-grow flex items-center justify-center">
               {item.id === "logo" && centerItem === "logo" &&
               typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] === 100 ? (
-                <div></div>
-              ) : (
-                <motion.div
-                  className="w-12 h-12 flex items-center justify-center"
-                  animate={{
-                    scale: 1,
-                  }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 400,
-                    damping: 30,
-                    duration: 0.2
-                  }}
-                >
-                  <svg
-                    viewBox="0 0 256 256"
-                    xmlns="http://www.w3.org/2000/svg"
-                    preserveAspectRatio="xMidYMid"
-                    className="w-full h-full"
+                  <div></div>
+                ) : (
+                  <motion.div
+                    className={`flex items-center justify-center ${item.id === "logo" ? "w-10 h-10" : "w-12 h-12"}`}
+                    animate={{
+                      scale: 1,
+                    }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 400,
+                      damping: 30,
+                      duration: 0.2
+                    }}
                   >
-                    <path d="M63.246 0L0 41.625l43.766 35.22 64.764-39.812-45.284-37.033zm129.728 0L147.69 37.033l64.762 39.812 43.768-35.22L193.735 0h-.761zm-129.728 115.6L0 74.336l43.766-35.033 64.764 39.626-45.284 36.672zm129.728 0L147.69 73.93l64.762-39.626 43.768 35.032-63.52 41.264zm-65.202 42.627l-45.046-36.848-45.285 36.848 45.285 37.22 45.046-37.22z" fill="#0061FF" />
-                  </svg>
-                </motion.div>
-              )}
+                    <svg
+                      viewBox="0 0 256 256"
+                      xmlns="http://www.w3.org/2000/svg"
+                      preserveAspectRatio="xMidYMid"
+                      className="w-full h-full"
+                    >
+                      <path d="M63.246 0L0 41.625l43.766 35.22 64.764-39.812-45.284-37.033zm129.728 0L147.69 37.033l64.762 39.812 43.768-35.22L193.735 0h-.761zm-129.728 115.6L0 74.336l43.766-35.033 64.764 39.626-45.284 36.672zm129.728 0L147.69 73.93l64.762-39.626 43.768 35.032-63.52 41.264zm-65.202 42.627l-45.046-36.848-45.285 36.848 45.285 37.22 45.046-37.22z" fill="#0061FF" />
+                    </svg>
+                  </motion.div>
+                )}
             </div>
 
             {/* Bottom section with icon and down arrow for logo when fully expanded to 100% */}

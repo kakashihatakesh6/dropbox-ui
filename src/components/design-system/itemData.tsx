@@ -12,7 +12,7 @@ export const getDesignSystemItems = (): DesignSystemItem[] => {
     {
       id: "framework",
       title: "Framework",
-      bgColor: "#2c3e50",
+      bgColor: "#3A86FF",
       textColor: "white",
       content: (
         <div className="h-full flex items-center justify-center">
@@ -85,7 +85,7 @@ export const getDesignSystemItems = (): DesignSystemItem[] => {
     {
       id: "voice",
       title: "Voice & Tone",
-      bgColor: "#f1c40f",
+      bgColor: "#FF9F1C",
       textColor: "#5d4037",
       content: (
         <div className="flex justify-between items-center h-full">
@@ -233,8 +233,8 @@ export const getDesignSystemItems = (): DesignSystemItem[] => {
     {
       id: "typography",
       title: "Typography",
-      bgColor: "#ff7f50",
-      textColor: "#5d0f0f",
+      bgColor: "#FB5607",
+      textColor: "#ffffff",
       content: (
         <div className="flex justify-center items-center h-full">
           {hoveredItem === "typography" ? (
@@ -247,7 +247,7 @@ export const getDesignSystemItems = (): DesignSystemItem[] => {
             </motion.div>
           ) : (
             <motion.span
-              className="text-[#5d0f0f] text-8xl font-serif"
+              className="text-[#ffffff] text-8xl font-serif"
               transition={{ type: "spring", stiffness: 300 }}
             >
               Aa
@@ -279,8 +279,8 @@ export const getDesignSystemItems = (): DesignSystemItem[] => {
     {
       id: "color",
       title: "Color",
-      bgColor: "#ff9f43",
-      textColor: "#6d3200",
+      bgColor: "#8338EC",
+      textColor: "white",
       content: (
         <div className="flex justify-center items-center h-full relative">
           {hoveredItem === "color" ? (
@@ -349,8 +349,8 @@ export const getDesignSystemItems = (): DesignSystemItem[] => {
     {
       id: "iconography",
       title: "Iconography",
-      bgColor: "#b8e994",
-      textColor: "#1e5631",
+      bgColor: "#06D6A0",
+      textColor: "#1A535C",
       content: (
         <div className="flex justify-center items-center h-full">
           <motion.div
@@ -366,7 +366,7 @@ export const getDesignSystemItems = (): DesignSystemItem[] => {
             {hoveredItem === "iconography" ? (
               <UnlockIcon size={64} className="text-white" />
             ) : (
-              <LockIcon size={64} className="text-[#1e5631]" />
+              <LockIcon size={64} className="text-[#1A535C]" />
             )}
           </motion.div>
         </div>
@@ -387,20 +387,20 @@ export const getDesignSystemItems = (): DesignSystemItem[] => {
             </div>
             <div className="flex gap-4 justify-around">
               <div className="flex flex-col items-center">
-                <div className="w-10 h-10 rounded-full bg-[#1e5631] flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-[#1A535C] flex items-center justify-center">
                   <LockIcon size={20} className="text-white" />
                 </div>
                 <span className="text-xs mt-1">Filled</span>
               </div>
               <div className="flex flex-col items-center">
-                <div className="w-10 h-10 rounded-full bg-white border-2 border-[#1e5631] flex items-center justify-center">
-                  <LockIcon size={20} className="text-[#1e5631]" />
+                <div className="w-10 h-10 rounded-full bg-white border-2 border-[#1A535C] flex items-center justify-center">
+                  <LockIcon size={20} className="text-[#1A535C]" />
                 </div>
                 <span className="text-xs mt-1">Outlined</span>
               </div>
               <div className="flex flex-col items-center">
-                <div className="w-10 h-10 rounded-full bg-[#1e5631] bg-opacity-20 flex items-center justify-center">
-                  <LockIcon size={20} className="text-[#1e5631]" />
+                <div className="w-10 h-10 rounded-full bg-[#1A535C] bg-opacity-20 flex items-center justify-center">
+                  <LockIcon size={20} className="text-[#1A535C]" />
                 </div>
                 <span className="text-xs mt-1">Duotone</span>
               </div>
@@ -412,7 +412,7 @@ export const getDesignSystemItems = (): DesignSystemItem[] => {
     {
       id: "imagery",
       title: "Imagery",
-      bgColor: "#8e44ad",
+      bgColor: "#FF006E",
       textColor: "white",
       content: (
         <div className="flex justify-center items-center h-full">
@@ -467,8 +467,8 @@ export const getDesignSystemItems = (): DesignSystemItem[] => {
     {
       id: "motion",
       title: "Motion",
-      bgColor: "#d8b5ff",
-      textColor: "#4a148c",
+      bgColor: "#FFBE0B",
+      textColor: "#5d4037",
       content: (
         <div className="flex justify-center items-center h-full">
           {hoveredItem === "motion" ? (
@@ -492,7 +492,7 @@ export const getDesignSystemItems = (): DesignSystemItem[] => {
               <motion.path
                 d="M30,30 Q75,120 120,30 Q75,-60 30,30"
                 fill="transparent"
-                stroke="#4a148c"
+                stroke="#5d4037"
                 strokeWidth="2"
                 initial={{ pathLength: 0 }}
                 animate={{
@@ -504,19 +504,19 @@ export const getDesignSystemItems = (): DesignSystemItem[] => {
                 cx="30"
                 cy="30"
                 r="8"
-                fill="#4a148c"
+                fill="#5d4037"
               />
               <motion.circle
                 cx="120"
                 cy="30"
                 r="8"
-                fill="#4a148c"
+                fill="#5d4037"
               />
               <motion.circle
                 cx="75"
                 cy="120"
                 r="8"
-                fill="#4a148c"
+                fill="#5d4037"
               />
             </svg>
           )}
@@ -554,7 +554,7 @@ export const getDesignSystemItems = (): DesignSystemItem[] => {
     {
       id: "accessibility",
       title: "Accessibility",
-      bgColor: "#20bf6b",
+      bgColor: "#4361EE",
       textColor: "white",
       content: (
         <div className="flex justify-center items-center h-full">
@@ -577,7 +577,7 @@ export const getDesignSystemItems = (): DesignSystemItem[] => {
             >
               <div className="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center">
                 <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center">
-                  <div className="w-6 h-6 rounded-full bg-[#20bf6b]"></div>
+                  <div className="w-6 h-6 rounded-full bg-[#4361EE]"></div>
                 </div>
               </div>
             </motion.div>

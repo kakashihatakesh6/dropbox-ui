@@ -91,10 +91,18 @@ export function useDesignSystem({
 
     e.preventDefault() // Prevent default scroll behavior
 
-    // Only allow scrolling to start changing the UI after a deliberate action
-    // This prevents accidental expansion on initial scroll
-    if (!isExpanding && e.deltaY > 0) {
+    // Allow scrolling in both directions if already expanding
+    if (isExpanding) {
+      // Continue with scrolling in both directions
+    } 
+    // For initial expansion, jump immediately to 20% on first scroll
+    else if (!isExpanding && e.deltaY > 0) {
       setIsExpanding(true)
+      // Jump immediately to 20% on first scroll down
+      setScrollAmount(prev => ({
+        ...prev,
+        [centerItem]: 20
+      }))
       return
     } else if (!isExpanding && e.deltaY < 0) {
       // If not expanding and trying to scroll up, do nothing
@@ -104,6 +112,14 @@ export function useDesignSystem({
     // Update scroll amount for the center item with more stable increments
     setScrollAmount((prev) => {
       const currentAmount = prev[centerItem] || 0
+      
+      // If we're below 20% and scrolling down, jump directly to 20%
+      if (currentAmount < 20 && e.deltaY > 0) {
+        return {
+          ...prev,
+          [centerItem]: 20
+        }
+      }
       
       // Use a dynamic increment for smoother response based on scroll direction
       // Slower increment for more stability, especially when expanding
@@ -135,11 +151,19 @@ export function useDesignSystem({
             ...prev,
             [centerItem]: 100
           }))
+        } else if (newAmount > 10 && newAmount < 30) {
+          // Add a snap to 20% threshold
+          setScrollAmount(prev => ({
+            ...prev,
+            [centerItem]: 20
+          }))
         } else if (newAmount < 5) {
           setScrollAmount(prev => ({
             ...prev,
             [centerItem]: 0
           }))
+          // Reset isExpanding when we reach 0
+          setIsExpanding(false)
         }
       }, 500) // Increased for more stability
 
@@ -170,12 +194,14 @@ export function useDesignSystem({
         ...prev,
         [item]: 0
       }))
+      // Reset isExpanding to allow the user to expand again
+      setIsExpanding(false)
     } else if (item === centerItem && !isExpanding) {
       // If clicking on the center item when not expanding, initiate expansion
       setIsExpanding(true)
       setScrollAmount(prev => ({
         ...prev,
-        [item]: 1 // Set to a small value to start expansion
+        [item]: 20 // Jump directly to 20% instead of 1%
       }))
     } else {
       // For other items, we expand to 100 but not show the expanded content immediately
@@ -237,8 +263,9 @@ export function useDesignSystem({
     if (item !== centerItem && centerItem &&
       typeof scrollAmount[centerItem] === 'number' &&
       scrollAmount[centerItem] > 90) {
-      // Fade out in the last 10% of expansion (from 90% to 100%)
-      return 1 - ((scrollAmount[centerItem] - 90) / 10)
+      // Fade out gradually in the last 10% of expansion (from 90% to 100%)
+      // Minimum opacity of 0.3 to ensure boxes remain visible
+      return Math.max(0.3, 1 - ((scrollAmount[centerItem] - 90) / 10));
     }
 
     // Otherwise maintain full opacity
@@ -382,36 +409,44 @@ export function useDesignSystem({
     // This creates a more stable and predictable movement pattern
     if (scrollAmount[centerItem] <= 50) {
       // First half - very minimal movement
-      moveOutFactor = (scrollAmount[centerItem] / 100) * 50; // Very small factor
+      moveOutFactor = (scrollAmount[centerItem] / 100) * 30; // Very small factor, reduced from 50
     } else if (scrollAmount[centerItem] <= 90) {
       // Second half - gradual movement
-      // Map 50-90% to a more controlled range (50-200)
+      // Map 50-90% to a more controlled range (30-120)
       const midProgress = (scrollAmount[centerItem] - 50) / 40;
-      moveOutFactor = 50 + (midProgress * 150); 
+      moveOutFactor = 30 + (midProgress * 90); // Reduced from 50+100 to keep items more visible
     } else {
-      // Final exit (90-100%) - ensure items exit completely but smoothly
+      // Final exit (90-100%) - ensure items remain visible in viewport at 90%
       const exitProgress = (scrollAmount[centerItem] - 90) / 10;
-      moveOutFactor = 200 + (exitProgress * 800); // Less aggressive than before
+      // Cap the maximum moveOutFactor to ensure boxes stay within viewport
+      // Reduced to keep boxes visible
+      moveOutFactor = 120 + (exitProgress * 180);
     }
 
-    // Fixed positions with equal distances
+    // Custom positions for masonry-like layout
+    // Items will move to fill the gaps around the logo
+    const viewportScaleFactor = 0.8; // Scale the positions to keep items within viewport
     switch (item) {
       case "framework": // top-left
-        return { x: -moveOutFactor, y: -moveOutFactor };
-      case "voice": // top-center
-        return { x: 0, y: -moveOutFactor };
-      case "typography": // top-right
-        return { x: moveOutFactor, y: -moveOutFactor };
-      case "color": // middle-left
-        return { x: -moveOutFactor, y: 0 };
-      case "iconography": // middle-right
-        return { x: moveOutFactor, y: 0 };
-      case "imagery": // bottom-left
-        return { x: -moveOutFactor, y: moveOutFactor };
-      case "motion": // bottom-center
-        return { x: 0, y: moveOutFactor };
-      default: // bottom-right
-        return { x: moveOutFactor, y: moveOutFactor };
+        return { x: -moveOutFactor * viewportScaleFactor, y: -moveOutFactor * viewportScaleFactor };
+      case "voice": // bottom-left
+        return { x: -moveOutFactor * viewportScaleFactor, y: moveOutFactor * viewportScaleFactor * 0.6 };
+      case "typography": // top-mid-left
+        // Moves more to the left to fill space
+        return { x: -moveOutFactor * viewportScaleFactor * 0.4, y: -moveOutFactor * viewportScaleFactor };
+      case "color": // bottom-mid-left
+        // Moves more to the left to fill space
+        return { x: -moveOutFactor * viewportScaleFactor * 0.4, y: moveOutFactor * viewportScaleFactor * 0.6 };
+      case "iconography": // top-mid-right
+        // Moves more to the right to fill space
+        return { x: moveOutFactor * viewportScaleFactor * 0.4, y: -moveOutFactor * viewportScaleFactor };
+      case "imagery": // bottom-mid-right
+        // Moves more to the right to fill space
+        return { x: moveOutFactor * viewportScaleFactor * 0.4, y: moveOutFactor * viewportScaleFactor * 0.6 };
+      case "motion": // top-right
+        return { x: moveOutFactor * viewportScaleFactor, y: -moveOutFactor * viewportScaleFactor };
+      default: // bottom-right (accessibility)
+        return { x: moveOutFactor * viewportScaleFactor, y: moveOutFactor * viewportScaleFactor * 0.6 };
     }
   }
 

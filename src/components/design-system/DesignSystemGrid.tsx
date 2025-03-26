@@ -51,34 +51,112 @@ export function DesignSystemGrid({
   const getGridPosition = (itemId: string) => {
     switch (itemId) {
       case "framework":
-        return "col-start-1 col-end-2 row-start-1 row-end-2";
+        return "col-start-1 col-end-2 row-start-1 row-end-3";
       case "voice":
-        return "col-start-2 col-end-3 row-start-1 row-end-2";
+        return "col-start-1 col-end-2 row-start-3 row-end-5";
       case "typography":
-        return "col-start-3 col-end-4 row-start-1 row-end-2";
+        return "col-start-2 col-end-3 row-start-1 row-end-2";
       case "color":
-        return "col-start-1 col-end-2 row-start-2 row-end-3";
-      case "logo": // Center item
-        return "col-start-2 col-end-3 row-start-2 row-end-3";
+        return "col-start-2 col-end-3 row-start-4 row-end-5";
+      case "logo":
+        return "col-start-2 col-end-4 row-start-2 row-end-4";
       case "iconography":
-        return "col-start-3 col-end-4 row-start-2 row-end-3";
+        return "col-start-3 col-end-4 row-start-1 row-end-2";
       case "imagery":
-        return "col-start-1 col-end-2 row-start-3 row-end-4";
+        return "col-start-3 col-end-4 row-start-4 row-end-5";
       case "motion":
-        return "col-start-2 col-end-3 row-start-3 row-end-4";
-      case "accessibility": // Bottom-right item
-        return "col-start-3 col-end-4 row-start-3 row-end-4";
+        return "col-start-4 col-end-5 row-start-1 row-end-3";
+      case "accessibility":
+        return "col-start-4 col-end-5 row-start-3 row-end-5";
       default:
         return "";
     }
   }
 
+  // Add geometric decorator particles
+  const particles = Array.from({ length: 20 }).map((_, i) => ({
+    id: i,
+    size: Math.random() * 6 + 2,
+    x: Math.random() * 100,
+    y: Math.random() * 100,
+    opacity: Math.random() * 0.5 + 0.1,
+    duration: Math.random() * 20 + 10,
+    delay: Math.random() * 5,
+  }));
+  
   return (
     <div
-      className="w-full h-screen bg-white flex items-center justify-center overflow-hidden"
+      className="w-full h-screen bg-white flex items-center justify-center overflow-hidden relative"
       ref={containerRef}
       onWheel={handleWheel}
     >
+      {/* Background particles */}
+      <div className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden">
+        {particles.map((particle) => (
+          <motion.div
+            key={`particle-${particle.id}`}
+            className="absolute rounded-full"
+            style={{
+              width: particle.size,
+              height: particle.size,
+              top: `${particle.y}%`,
+              left: `${particle.x}%`,
+              backgroundColor: '#0061FF',
+              opacity: particle.opacity,
+            }}
+            animate={{
+              y: ['0%', '100%', '0%'],
+              opacity: [particle.opacity, particle.opacity * 0.5, particle.opacity],
+              scale: [1, 1.2, 1],
+            }}
+            transition={{
+              y: {
+                duration: particle.duration,
+                repeat: Infinity,
+                ease: 'linear',
+                delay: particle.delay,
+              },
+              opacity: {
+                duration: particle.duration / 2,
+                repeat: Infinity,
+                repeatType: 'reverse',
+                ease: 'easeInOut',
+                delay: particle.delay,
+              },
+              scale: {
+                duration: particle.duration / 3,
+                repeat: Infinity,
+                repeatType: 'reverse',
+                ease: 'easeInOut',
+                delay: particle.delay,
+              },
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Decorative lines */}
+      <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ opacity: 0.1 }}>
+        <motion.path
+          d="M0,100 Q250,0 500,100 Q750,200 1000,100 Q1250,0 1500,100 T2000,100"
+          stroke="#0061FF"
+          strokeWidth="1"
+          fill="none"
+          initial={{ pathLength: 0, pathOffset: 1 }}
+          animate={{ pathLength: 1, pathOffset: 0 }}
+          transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
+        />
+        <motion.path
+          d="M0,300 Q250,200 500,300 Q750,400 1000,300 Q1250,200 1500,300 T2000,300"
+          stroke="#0061FF"
+          strokeWidth="1"
+          fill="none"
+          initial={{ pathLength: 0, pathOffset: 1 }}
+          animate={{ pathLength: 1, pathOffset: 0 }}
+          transition={{ duration: 7, repeat: Infinity, ease: "linear", delay: 1 }}
+        />
+      </svg>
+
       {/* Grid lines that ONLY appear during expansion */}
       {centerItem && scrollAmount[centerItem] && scrollAmount[centerItem] > 0 && (
         <div className="fixed inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
@@ -146,6 +224,78 @@ export function DesignSystemGrid({
         </div>
       )}
 
+      {/* Add connecting lines between boxes at all times */}
+      <svg
+        className="absolute inset-0 w-full h-full pointer-events-none"
+        style={{
+          opacity: 0.4,
+          zIndex: 3
+        }}
+      >
+        {/* Create static connecting lines between adjacent boxes */}
+        {items.map((item, idx) => {
+          if (!itemRefs.current[item.id]) return null;
+          
+          // Skip the center logo for these static connections
+          if (item.id === "logo") return null;
+          
+          // Define connections - which items should connect to which others
+          const connections = {
+            "framework": ["typography", "motion"],
+            "voice": ["color", "imagery"],
+            "typography": ["framework", "iconography"],
+            "color": ["voice", "imagery"],
+            "iconography": ["typography", "accessibility"],
+            "imagery": ["voice", "color"],
+            "motion": ["framework", "accessibility"],
+            "accessibility": ["motion", "iconography"]
+          };
+          
+          const currentConnections = connections[item.id as keyof typeof connections] || [];
+          
+          return currentConnections.map((targetId) => {
+            if (!itemRefs.current[targetId]) return null;
+            
+            const currentBox = itemRefs.current[item.id]?.getBoundingClientRect();
+            const targetBox = itemRefs.current[targetId]?.getBoundingClientRect();
+            
+            if (!currentBox || !targetBox) return null;
+            
+            // Calculate center points
+            const currentCenterX = currentBox.left + currentBox.width / 2;
+            const currentCenterY = currentBox.top + currentBox.height / 2;
+            const targetCenterX = targetBox.left + targetBox.width / 2;
+            const targetCenterY = targetBox.top + targetBox.height / 2;
+            
+            // Add slight curve to the connecting lines
+            const midX = (currentCenterX + targetCenterX) / 2;
+            const midY = (currentCenterY + targetCenterY) / 2;
+            const curveFactor = 0.2;
+            const dx = targetCenterX - currentCenterX;
+            const dy = targetCenterY - currentCenterY;
+            const ctrlX = midX - dy * curveFactor;
+            const ctrlY = midY + dx * curveFactor;
+            
+            // Create quadratic bezier curve
+            const path = `M ${currentCenterX} ${currentCenterY} Q ${ctrlX} ${ctrlY} ${targetCenterX} ${targetCenterY}`;
+            
+            return (
+              <motion.path
+                key={`static-connection-${item.id}-${targetId}`}
+                d={path}
+                stroke="rgba(65,182,255,0.2)"
+                strokeWidth="1"
+                strokeDasharray="4 2"
+                fill="none"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 1, delay: 0.1 * idx }}
+              />
+            );
+          });
+        })}
+      </svg>
+      
       {/* Add connecting lines between boxes ONLY during expansion */}
       {centerItem && scrollAmount[centerItem] && scrollAmount[centerItem] > 20 && (
         <svg
@@ -211,7 +361,7 @@ export function DesignSystemGrid({
       )}
 
       <div
-        className={`grid grid-cols-3 grid-rows-3 h-full w-full max-h-screen max-w-screen p-8 relative`}
+        className={`grid grid-cols-4 grid-rows-4 h-full w-full max-h-screen max-w-screen p-8 relative`}
         style={{
           gap: '1.25rem', // Fixed gap size that doesn't change during expansion
           zIndex: 5 // Above the grid lines
