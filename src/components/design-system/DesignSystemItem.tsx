@@ -131,6 +131,13 @@ export function DesignSystemItem({
           scale: 1,
           zIndex: 30
         }),
+        ...(item.id === "logo" && centerItem === "logo" &&
+          typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] === 0 && {
+          width: "25vw",
+          height: "25vw",
+          position: "relative",
+          zIndex: 25,
+        }),
         ...(isCenter && !isExpanded && centerItem &&
           typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] > 0 && {
           position: "relative",

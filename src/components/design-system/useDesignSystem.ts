@@ -440,6 +440,12 @@ export function useDesignSystem({
       case "color": // bottom-mid-left
         // Moves more to the left to fill space
         return { x: -moveOutFactor * viewportScaleFactor * 0.4, y: moveOutFactor * viewportScaleFactor * 0.6 };
+      case "leftBox": // left of logo
+        // Move primarily to the left
+        return { x: -moveOutFactor * viewportScaleFactor * 1.2, y: 0 };
+      case "rightBox": // right of logo
+        // Move primarily to the right
+        return { x: moveOutFactor * viewportScaleFactor * 1.2, y: 0 };
       case "iconography": // top-mid-right
         // Moves more to the right to fill space
         return { x: moveOutFactor * viewportScaleFactor * 0.4, y: -moveOutFactor * viewportScaleFactor };
@@ -448,8 +454,10 @@ export function useDesignSystem({
         return { x: moveOutFactor * viewportScaleFactor * 0.4, y: moveOutFactor * viewportScaleFactor * 0.6 };
       case "motion": // top-right
         return { x: moveOutFactor * viewportScaleFactor, y: -moveOutFactor * viewportScaleFactor };
-      default: // bottom-right (accessibility)
+      case "accessibility": // bottom-right
         return { x: moveOutFactor * viewportScaleFactor, y: moveOutFactor * viewportScaleFactor * 0.6 };
+      default:
+        return { x: 0, y: 0 };
     }
   }
 
