@@ -94,13 +94,13 @@ export function useDesignSystem({
     if (isExpanding) {
       // Continue with scrolling in both directions
     } 
-    // For initial expansion, jump immediately to 20% on first scroll
+    // For initial expansion, jump immediately to 25% on first scroll for quicker start
     else if (!isExpanding && e.deltaY > 0) {
       setIsExpanding(true)
-      // Jump immediately to 20% on first scroll down
+      // Jump immediately to 25% on first scroll down for more responsiveness
       setScrollAmount(prev => ({
         ...prev,
-        [centerItem]: 20
+        [centerItem]: 25
       }))
       return
     } else if (!isExpanding && e.deltaY < 0) {
@@ -112,28 +112,32 @@ export function useDesignSystem({
     setScrollAmount((prev) => {
       const currentAmount = prev[centerItem] || 0
       
-      // If we're below 20% and scrolling down, jump directly to 20%
-      if (currentAmount < 20 && e.deltaY > 0) {
+      // If we're below 25% and scrolling down, jump directly to 25%
+      if (currentAmount < 25 && e.deltaY > 0) {
         return {
           ...prev,
-          [centerItem]: 20
+          [centerItem]: 25
         }
       }
       
-      // Use a dynamic increment for smoother response based on scroll direction
-      // Slower increment for more stability, especially when expanding
-      const baseIncrement = 0.6; // Reduced for smoother scrolling
+      // Use a higher base increment for faster response while scrolling
+      const baseIncrement = 3.5; // Increased from 0.6 for much higher sensitivity
       
-      // Apply exponential smoothing for scroll handling
-      // This makes initial movement slower and more controlled
+      // Use a dynamic scaling factor based on current position
+      // This creates an ease-in-out effect for the scrolling
+      const position = currentAmount / 100;
+      const easeInOutFactor = 0.8 + (0.4 * Math.sin(position * Math.PI));
+      
+      // Calculate increment with easing and direction
+      // This makes small wheel movements more effective
+      const wheelSensitivity = Math.min(Math.abs(e.deltaY) * 0.05, 1.2);
       const increment = e.deltaY > 0 
-        ? Math.min(baseIncrement, baseIncrement * Math.max(0.3, currentAmount / 100))
-        : -baseIncrement;
+        ? baseIncrement * easeInOutFactor * wheelSensitivity
+        : -baseIncrement * easeInOutFactor * wheelSensitivity;
         
       const newAmount = Math.max(0, Math.min(100, currentAmount + increment));
 
-      // We no longer set expandedItem when reaching 100%
-      // We just let the visual expansion happen without showing the detailed content
+      // Handle the transition out of expanding state
       if (newAmount <= 5 && isExpanding) {
         setIsExpanding(false)
       }
@@ -143,18 +147,18 @@ export function useDesignSystem({
         clearTimeout(scrollTimeoutRef.current)
       }
 
-      // Set a timeout to snap to thresholds for stability
+      // Set a timeout to snap to thresholds with shorter delay for responsiveness
       scrollTimeoutRef.current = setTimeout(() => {
-        if (newAmount > 95) {
+        if (newAmount > 85) { // Reduced threshold from 95 to 85 for quicker completion
           setScrollAmount(prev => ({
             ...prev,
             [centerItem]: 100
           }))
-        } else if (newAmount > 10 && newAmount < 30) {
-          // Add a snap to 20% threshold
+        } else if (newAmount > 10 && newAmount < 35) {
+          // Expanded snap range for more stability at low values
           setScrollAmount(prev => ({
             ...prev,
-            [centerItem]: 20
+            [centerItem]: 25
           }))
         } else if (newAmount < 5) {
           setScrollAmount(prev => ({
@@ -164,7 +168,7 @@ export function useDesignSystem({
           // Reset isExpanding when we reach 0
           setIsExpanding(false)
         }
-      }, 500) // Increased for more stability
+      }, 250) // Reduced from 500ms for more responsive behavior
 
       return {
         ...prev,
