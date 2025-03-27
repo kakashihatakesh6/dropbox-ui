@@ -7,7 +7,6 @@ export function useDesignSystem({
   initialCenterItem,
   entranceAnimation = false,
   scrollProgress = 0,
-  logoBounds,
   initialScrollValue
 }: DesignSystemProps = {}) {
   const [expandedItem, setExpandedItem] = useState<string | null>(null)

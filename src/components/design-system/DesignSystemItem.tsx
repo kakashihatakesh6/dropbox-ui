@@ -8,17 +8,17 @@ import type { DesignSystemItem as DesignSystemItemType } from "./types"
 const adjustColorBrightness = (hexColor: string, percent: number): string => {
   // Remove the # if present
   hexColor = hexColor.replace('#', '');
-  
+
   // Parse the hex values
   let r = parseInt(hexColor.substr(0, 2), 16);
   let g = parseInt(hexColor.substr(2, 2), 16);
   let b = parseInt(hexColor.substr(4, 2), 16);
-  
+
   // Adjust brightness
   r = Math.min(255, Math.max(0, r + percent));
   g = Math.min(255, Math.max(0, g + percent));
   b = Math.min(255, Math.max(0, b + percent));
-  
+
   // Convert back to hex
   return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
 };
@@ -55,7 +55,6 @@ export function DesignSystemItem({
   isCenter,
   isExpanded,
   isHovered,
-  getExpansionScale,
   getItemOpacity,
   getItemSize,
   getZIndex,
@@ -71,17 +70,16 @@ export function DesignSystemItem({
   gridPosition,
   scrollAmount,
   entranceAnimation,
-  hasInitialized,
   isExpanding,
   centerItem,
-  transitionDuration
+
 }: DesignSystemItemProps) {
   // Get initial position for entrance animation
   const initialPosition = getEntrancePosition(item.id);
-  
+
   // Get initial position from logo bounds for the transition animation
   const initialLogoPosition = getLogoInitialPosition(item.id);
-  
+
   // Calculate position offset for moving items away from center
   const positionOffset = getPositionOffset(item.id);
 
@@ -145,7 +143,7 @@ export function DesignSystemItem({
         type: "tween",
         ease: "easeInOut",
         duration: 0.4,
-        ...(isExpanded || (isExpanded !== true && centerItem !== null && centerItem !== item.id)
+        ...(isExpanded || (isExpanded === false && centerItem !== null && centerItem !== item.id)
           ? {
             type: "spring",
             stiffness: 80,
@@ -161,13 +159,13 @@ export function DesignSystemItem({
       onMouseLeave={onMouseLeave}
       onClick={onClick}
       style={{
-        background: item.id === "logo" 
-          ? item.bgColor 
+        background: item.id === "logo"
+          ? item.bgColor
           : `linear-gradient(135deg, ${item.bgColor}, ${adjustColorBrightness(item.bgColor, -20)})`,
         color: item.textColor,
         border: `1px solid rgba(255, 255, 255, ${isHovered ? '0.2' : '0.1'})`,
-        boxShadow: isHovered 
-          ? `0 10px 30px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 1px 0 0 rgba(255, 255, 255, 0.2)` 
+        boxShadow: isHovered
+          ? `0 10px 30px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 1px 0 0 rgba(255, 255, 255, 0.2)`
           : `0 4px 20px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.05), inset 0 1px 0 0 rgba(255, 255, 255, 0.1)`,
         padding: "1rem",
         ...(item.id === "logo" && {
@@ -219,31 +217,31 @@ export function DesignSystemItem({
 
             <div className="flex-grow flex items-center justify-center">
               {item.id === "logo" && centerItem === "logo" &&
-              typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] === 100 ? (
-                  <div></div>
-                ) : (
-                  <motion.div
-                    className={`flex items-center justify-center ${item.id === "logo" ? "w-10 h-10" : "w-12 h-12"}`}
-                    animate={{
-                      scale: 1,
-                    }}
-                    transition={{
-                      type: "spring",
-                      stiffness: 400,
-                      damping: 30,
-                      duration: 0.2
-                    }}
+                typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] === 100 ? (
+                <div></div>
+              ) : (
+                <motion.div
+                  className={`flex items-center justify-center ${item.id === "logo" ? "w-10 h-10" : "w-12 h-12"}`}
+                  animate={{
+                    scale: 1,
+                  }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 400,
+                    damping: 30,
+                    duration: 0.2
+                  }}
+                >
+                  <svg
+                    viewBox="0 0 256 256"
+                    xmlns="http://www.w3.org/2000/svg"
+                    preserveAspectRatio="xMidYMid"
+                    className="w-full h-full"
                   >
-                    <svg
-                      viewBox="0 0 256 256"
-                      xmlns="http://www.w3.org/2000/svg"
-                      preserveAspectRatio="xMidYMid"
-                      className="w-full h-full"
-                    >
-                      <path d="M63.246 0L0 41.625l43.766 35.22 64.764-39.812-45.284-37.033zm129.728 0L147.69 37.033l64.762 39.812 43.768-35.22L193.735 0h-.761zm-129.728 115.6L0 74.336l43.766-35.033 64.764 39.626-45.284 36.672zm129.728 0L147.69 73.93l64.762-39.626 43.768 35.032-63.52 41.264zm-65.202 42.627l-45.046-36.848-45.285 36.848 45.285 37.22 45.046-37.22z" fill="#0061FF" />
-                    </svg>
-                  </motion.div>
-                )}
+                    <path d="M63.246 0L0 41.625l43.766 35.22 64.764-39.812-45.284-37.033zm129.728 0L147.69 37.033l64.762 39.812 43.768-35.22L193.735 0h-.761zm-129.728 115.6L0 74.336l43.766-35.033 64.764 39.626-45.284 36.672zm129.728 0L147.69 73.93l64.762-39.626 43.768 35.032-63.52 41.264zm-65.202 42.627l-45.046-36.848-45.285 36.848 45.285 37.22 45.046-37.22z" fill="#0061FF" />
+                  </svg>
+                </motion.div>
+              )}
             </div>
 
             {/* Bottom section with icon and down arrow for logo when fully expanded to 100% */}
