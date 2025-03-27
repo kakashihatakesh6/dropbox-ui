@@ -149,6 +149,11 @@ export function DesignSystemItem({
           transformOrigin: "center center",
           scale: 1 + (scrollAmount[centerItem] / 100) * 0.2,
         }),
+        ...(item.id !== "logo" && centerItem === "logo" && 
+          typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] === 100 && {
+          opacity: 0,
+          visibility: "hidden" as const
+        }),
       }}
       transition={{
         type: "tween",

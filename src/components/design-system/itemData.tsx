@@ -12,8 +12,6 @@ import {
   ImageIcon, 
   CircleIcon, 
   ActivityIcon, 
-  AccessibilityIcon,
-  ChevronRightIcon,
   MessageSquareIcon,
   SquareIcon,
   BoxIcon,
@@ -239,53 +237,10 @@ export const getDesignSystemItems = (): DesignSystemItem[] => {
       ),
     },
     {
-      id: "rightBox",
-      title: "Projects",
-      bgColor: "#FF006E",
-      textColor: "white",
-      content: (
-        <div className="h-full flex flex-col items-center justify-center gap-3">
-          <h3 className="text-lg font-semibold">Projects</h3>
-          <motion.div 
-            whileHover={{ scale: 1.1 }}
-            className="flex items-center justify-center"
-          >
-            <GridIcon size={48} className="text-white" />
-          </motion.div>
-        </div>
-      ),
-      expandedContent: (
-        <>
-          <h3 className="text-xl font-semibold mb-2">Our Projects</h3>
-          <p className="mb-4">
-            Explore our successful implementations and client work.
-          </p>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <h4 className="font-medium">Recent Work:</h4>
-              <ul className="list-disc pl-5">
-                <li>E-commerce Platform</li>
-                <li>Mobile Banking App</li>
-                <li>Healthcare Portal</li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-medium">Industries:</h4>
-              <ul className="list-disc pl-5">
-                <li>Finance</li>
-                <li>Healthcare</li>
-                <li>Retail</li>
-              </ul>
-            </div>
-          </div>
-        </>
-      ),
-    },
-    {
       id: "typography",
       title: "Typography",
-      bgColor: "#FB5607",
-      textColor: "#ffffff",
+      bgColor: "#3F8EFC",
+      textColor: "white",
       content: (
         <div className="h-full flex flex-col items-center justify-center gap-3">
           <h3 className="text-lg font-semibold">Typography</h3>
@@ -347,7 +302,7 @@ export const getDesignSystemItems = (): DesignSystemItem[] => {
     {
       id: "color",
       title: "Color",
-      bgColor: "#8338EC",
+      bgColor: "#FB5607",
       textColor: "white",
       content: (
         <div className="h-full flex flex-col items-center justify-center gap-3">
@@ -419,7 +374,7 @@ export const getDesignSystemItems = (): DesignSystemItem[] => {
     {
       id: "iconography",
       title: "Iconography",
-      bgColor: "#FF006E",
+      bgColor: "#4CC9F0",
       textColor: "white",
       content: (
         <div className="h-full flex flex-col items-center justify-center gap-3">
@@ -495,7 +450,7 @@ export const getDesignSystemItems = (): DesignSystemItem[] => {
     {
       id: "imagery",
       title: "Imagery",
-      bgColor: "#3A86FF",
+      bgColor: "#06D6A0",
       textColor: "white",
       content: (
         <div className="h-full flex flex-col items-center justify-center gap-3">
@@ -562,8 +517,8 @@ export const getDesignSystemItems = (): DesignSystemItem[] => {
     {
       id: "motion",
       title: "Motion",
-      bgColor: "#FF9F1C",
-      textColor: "#5d4037",
+      bgColor: "#7209B7", 
+      textColor: "white",
       content: (
         <div className="h-full flex flex-col items-center justify-center gap-3">
           <h3 className="text-lg font-semibold">Motion</h3>
@@ -583,7 +538,7 @@ export const getDesignSystemItems = (): DesignSystemItem[] => {
                   scale: { duration: 1.5, repeat: Infinity, ease: "easeInOut" }
                 }}
               >
-                <ActivityIcon size={48} className="text-[#5d4037]" />
+                <ActivityIcon size={48} className="text-white" />
               </motion.div>
             </motion.div>
           ) : (
@@ -591,7 +546,7 @@ export const getDesignSystemItems = (): DesignSystemItem[] => {
               whileHover={{ scale: 1.1 }}
               className="flex items-center justify-center"
             >
-              <ActivityIcon size={48} className="text-[#5d4037]" />
+              <ActivityIcon size={48} className="text-white" />
             </motion.div>
           )}
         </div>
@@ -617,79 +572,6 @@ export const getDesignSystemItems = (): DesignSystemItem[] => {
                 <li>Micro-interactions: 150-250ms</li>
                 <li>Loading states: looping</li>
                 <li>Hover effects: 150ms</li>
-              </ul>
-            </div>
-          </div>
-        </>
-      ),
-    },
-    {
-      id: "accessibility",
-      title: "Accessibility",
-      bgColor: "#6EBF8B",
-      textColor: "white",
-      content: (
-        <div className="h-full flex flex-col items-center justify-center gap-3">
-          <h3 className="text-lg font-semibold">Accessibility</h3>
-          {hoveredItem === "accessibility" ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
-            >
-              <motion.div 
-                className="relative"
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-              >
-                <AccessibilityIcon size={48} className="text-white" />
-                <motion.div
-                  className="absolute inset-0 w-full h-full flex items-center justify-center"
-                  animate={{ 
-                    opacity: [0, 0.8, 0],
-                    scale: [0.8, 1.5, 0.8]
-                  }}
-                  transition={{ 
-                    duration: 2, 
-                    repeat: Infinity, 
-                    ease: "easeInOut" 
-                  }}
-                >
-                  <AccessibilityIcon size={48} className="text-white opacity-30" />
-                </motion.div>
-              </motion.div>
-            </motion.div>
-          ) : (
-            <motion.div 
-              whileHover={{ scale: 1.1 }}
-              className="flex items-center justify-center"
-            >
-              <AccessibilityIcon size={48} className="text-white" />
-            </motion.div>
-          )}
-        </div>
-      ),
-      expandedContent: (
-        <>
-          <h3 className="text-xl font-semibold mb-2">Inclusive Design</h3>
-          <p className="mb-4">Ensuring our products are usable by people with diverse abilities and needs.</p>
-          <div className="space-y-4">
-            <div>
-              <h4 className="font-medium">Core Principles</h4>
-              <ul className="list-disc pl-5 mt-2">
-                <li>WCAG 2.1 AA compliance minimum</li>
-                <li>Keyboard navigability</li>
-                <li>Screen reader compatibility</li>
-                <li>Color contrast ratios (4.5:1 minimum)</li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-medium">Testing Requirements</h4>
-              <ul className="list-disc pl-5 mt-2">
-                <li>Automated testing</li>
-                <li>Manual keyboard testing</li>
-                <li>Screen reader validation</li>
-                <li>User testing with diverse abilities</li>
               </ul>
             </div>
           </div>

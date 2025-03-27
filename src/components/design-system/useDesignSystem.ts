@@ -262,13 +262,20 @@ export function useDesignSystem({
     // When an item is fully expanded, make other items completely invisible
     if (expandedItem && expandedItem !== item) return 0
 
-    // Start fading out only in final 10% of expansion
+    // When scrolled to 100%, make all non-logo items completely transparent
+    if (item !== "logo" && centerItem === "logo" && 
+        typeof scrollAmount[centerItem] === 'number' && 
+        scrollAmount[centerItem] === 100) {
+      return 0;
+    }
+
+    // Start fading out earlier for a smoother transition, around 80% scroll
     if (item !== centerItem && centerItem &&
       typeof scrollAmount[centerItem] === 'number' &&
-      scrollAmount[centerItem] > 90) {
-      // Fade out gradually in the last 10% of expansion (from 90% to 100%)
-      // Minimum opacity of 0.3 to ensure boxes remain visible
-      return Math.max(0.3, 1 - ((scrollAmount[centerItem] - 90) / 10));
+      scrollAmount[centerItem] > 80) {
+      // Fade out gradually from 80% to 100% of expansion
+      // Fully transparent by 100%
+      return Math.max(0, 1 - ((scrollAmount[centerItem] - 80) / 20));
     }
 
     // Otherwise maintain full opacity
@@ -313,39 +320,32 @@ export function useDesignSystem({
     return {}
   }
 
-  // Calculate initial position for entrance animation based on item position and scrollProgress
+  // Get entrance position for animation
   const getEntrancePosition = (itemId: string) => {
-    if (!entranceAnimation || scrollProgress > 0.8) return { x: 0, y: 0 }
-
-    // Apply a staggered entrance based on scrollProgress, complete by 80%
-    const entranceProgress = Math.min(scrollProgress * 1.25, 1)
-
-    // Enhanced entrances - create a scale effect from center to sides
-    // Make effect more dramatic (larger initial offsets)
-    const entranceOffset = 3000 * (1 - entranceProgress)
-
-    // Position based on item ID
+    if (entranceAnimation === false) return { x: 0, y: 0 }
+    
+    // Create staggered entrance effects based on item IDs
     switch (itemId) {
-      case "framework": // top-left
-        return { x: -entranceOffset * 1.2, y: -entranceOffset * 1.2 };
-      case "voice": // top-center
-        return { x: 0, y: -entranceOffset * 1.5 };
-      case "typography": // top-right
-        return { x: entranceOffset * 1.2, y: -entranceOffset * 1.2 };
-      case "color": // middle-left
-        return { x: -entranceOffset * 1.5, y: 0 };
-      case "logo": // center - no effect on logo
-        return { x: 0, y: 0 };
-      case "iconography": // middle-right
-        return { x: entranceOffset * 1.5, y: 0 };
-      case "imagery": // bottom-left
-        return { x: -entranceOffset * 1.2, y: entranceOffset * 1.2 };
-      case "motion": // bottom-center
-        return { x: 0, y: entranceOffset * 1.5 };
-      case "accessibility": // bottom-right
-        return { x: entranceOffset * 1.2, y: entranceOffset * 1.2 };
+      case "framework":
+        return { x: -100, y: -50 }
+      case "voice":
+        return { x: -100, y: 50 }
+      case "typography":
+        return { x: -50, y: -100 }
+      case "color":
+        return { x: 50, y: 100 }
+      case "leftBox":
+        return { x: -50, y: 0 }
+      case "logo": 
+        return { x: 0, y: 0 }
+      case "iconography":
+        return { x: 50, y: -50 }
+      case "imagery":
+        return { x: 100, y: 100 }
+      case "motion":
+        return { x: 100, y: -100 }
       default:
-        return { x: 0, y: 0 };
+        return { x: 0, y: 0 }
     }
   }
 
@@ -397,72 +397,37 @@ export function useDesignSystem({
     return { x: 0, y: 0 };
   }
 
-  // Calculate position offset for moving items away from center
+  // Get position offset for expanding state
   const getPositionOffset = (item: string) => {
-    if (!centerItem || !isExpanding) return { x: 0, y: 0 };
+    if (!centerItem || !isExpanding) return { x: 0, y: 0 }
     
-    // When the logo scroll amount is 0 or less, return no offset for the logo to prevent overlapping
-    if (item === "logo" && centerItem === "logo" && 
-        (typeof scrollAmount[centerItem] !== 'number' || scrollAmount[centerItem] <= 0)) {
-      return { x: 0, y: 0 };
-    }
+    const amount = scrollAmount[centerItem] || 0
+    if (amount <= 0) return { x: 0, y: 0 }
     
-    // Only apply offsets when scroll amount is greater than 0
-    const scrollFactor = scrollAmount[centerItem] ? scrollAmount[centerItem] / 100 : 0;
+    // Create offset based on item position relative to center
+    const baseOffset = amount * 2.5 // Adjust the multiplier for more/less movement
     
-    // Use a more stable movement pattern with minimal initial movement
-    let moveOutFactor = 0;
-
-    // Reduce the overall movement amount and make it more linear
-    // This creates a more stable and predictable movement pattern
-    if (scrollAmount[centerItem] <= 50) {
-      // First half - very minimal movement
-      moveOutFactor = (scrollAmount[centerItem] / 100) * 30; // Very small factor, reduced from 50
-    } else if (scrollAmount[centerItem] <= 90) {
-      // Second half - gradual movement
-      // Map 50-90% to a more controlled range (30-120)
-      const midProgress = (scrollAmount[centerItem] - 50) / 40;
-      moveOutFactor = 30 + (midProgress * 90); // Reduced from 50+100 to keep items more visible
-    } else {
-      // Final exit (90-100%) - ensure items remain visible in viewport at 90%
-      const exitProgress = (scrollAmount[centerItem] - 90) / 10;
-      // Cap the maximum moveOutFactor to ensure boxes stay within viewport
-      // Reduced to keep boxes visible
-      moveOutFactor = 120 + (exitProgress * 180);
-    }
-
-    // Custom positions for masonry-like layout
-    // Items will move to fill the gaps around the logo
-    const viewportScaleFactor = 0.8; // Scale the positions to keep items within viewport
-    switch (item) {
-      case "framework": // top-left
-        return { x: -moveOutFactor * viewportScaleFactor, y: -moveOutFactor * viewportScaleFactor };
-      case "voice": // bottom-left
-        return { x: -moveOutFactor * viewportScaleFactor, y: moveOutFactor * viewportScaleFactor * 0.6 };
-      case "typography": // top-mid-left
-        // Moves more to the left to fill space
-        return { x: -moveOutFactor * viewportScaleFactor * 0.4, y: -moveOutFactor * viewportScaleFactor };
-      case "color": // bottom-mid-left
-        // Moves more to the left to fill space
-        return { x: -moveOutFactor * viewportScaleFactor * 0.4, y: moveOutFactor * viewportScaleFactor * 0.6 };
-      case "leftBox": // left of logo
-        // Move primarily to the left
-        return { x: -moveOutFactor * viewportScaleFactor * 1.2, y: 0 };
-      case "rightBox": // right of logo
-        // Move primarily to the right
-        return { x: moveOutFactor * viewportScaleFactor * 1.2, y: 0 };
-      case "iconography": // top-mid-right
-        // Moves more to the right to fill space
-        return { x: moveOutFactor * viewportScaleFactor * 0.4, y: -moveOutFactor * viewportScaleFactor };
-      case "imagery": // bottom-mid-right
-        // Moves more to the right to fill space
-        return { x: moveOutFactor * viewportScaleFactor * 0.4, y: moveOutFactor * viewportScaleFactor * 0.6 };
-      case "motion": // top-right
-        return { x: moveOutFactor * viewportScaleFactor, y: -moveOutFactor * viewportScaleFactor };
-      case "accessibility": // bottom-right
-        return { x: moveOutFactor * viewportScaleFactor, y: moveOutFactor * viewportScaleFactor * 0.6 };
+    switch(item) {
+      case "framework":
+        return { x: -baseOffset, y: -baseOffset }
+      case "voice":
+        return { x: -baseOffset, y: baseOffset }
+      case "typography":
+        return { x: -baseOffset * 0.5, y: -baseOffset * 1.2 }
+      case "color":
+        return { x: -baseOffset * 0.5, y: baseOffset * 1.2 }
+      case "leftBox":
+        return { x: -baseOffset, y: 0 }
+      case "logo":
+        return { x: 0, y: 0 } // Logo stays centered
+      case "iconography":
+        return { x: baseOffset * 0.8, y: -baseOffset * 0.8 }
+      case "imagery":
+        return { x: baseOffset * 0.8, y: baseOffset * 0.8 }
+      case "motion":
+        return { x: baseOffset, y: -baseOffset }
       default:
-        return { x: 0, y: 0 };
+        return { x: 0, y: 0 }
     }
   }
 

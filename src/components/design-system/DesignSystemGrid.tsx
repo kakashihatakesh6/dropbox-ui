@@ -57,19 +57,15 @@ export function DesignSystemGrid({
       case "typography":
         return "col-start-2 col-end-4 row-start-1 row-end-2";
       case "color":
-        return "col-start-3 col-end-4 row-start-4 row-end-5";
+        return "col-start-5 col-end-6 row-start-2 row-end-5";
       case "leftBox":
         return "col-start-2 col-end-3 row-start-2 row-end-5";
       case "logo":
         return "col-start-3 col-end-4 row-start-2 row-end-4";
-      case "accessibility":
-        return "col-start-4 col-end-5 row-start-4 row-end-5";
-      case "rightBox":
-        return "col-start-5 col-end-6 row-start-2 row-end-4";
       case "iconography":
         return "col-start-4 col-end-5 row-start-1 row-end-4";
       case "imagery":
-        return "col-start-5 col-end-6 row-start-4 row-end-5";
+        return "col-start-3 col-end-5 row-start-4 row-end-5";
       case "motion":
         return "col-start-5 col-end-6 row-start-1 row-end-2";
       default:
@@ -251,12 +247,10 @@ export function DesignSystemGrid({
             "typography": ["framework", "iconography"],
             "color": ["voice", "imagery"],
             "leftBox": ["logo", "typography"],
-            "logo": ["leftBox", "accessibility"],
-            "accessibility": ["logo", "rightBox"],
-            "rightBox": ["accessibility", "motion"],
-            "iconography": ["typography", "imagery"],
-            "imagery": ["voice", "color"],
-            "motion": ["framework", "rightBox"]
+            "logo": ["leftBox", "iconography"],
+            "iconography": ["typography", "logo", "imagery"],
+            "imagery": ["voice", "color", "iconography"],
+            "motion": ["framework"]
           };
           
           const currentConnections = connections[item.id as keyof typeof connections] || [];
@@ -375,7 +369,7 @@ export function DesignSystemGrid({
           zIndex: 5 // Above the grid lines
         }}
       >
-        {items.map((item) => (
+        {items.filter(item => item.id !== "accessibility" && item.id !== "rightBox").map((item) => (
           <DesignSystemItem
             key={item.id}
             item={item}
