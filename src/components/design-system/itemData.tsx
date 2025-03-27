@@ -27,10 +27,26 @@ export const getDesignSystemItems = (): DesignSystemItem[] => {
               transition={{ duration: 0.5 }}
               className="grid grid-cols-2 grid-rows-2 gap-3"
             >
-              <div className="w-8 h-8 bg-white rounded-md"></div>
-              <div className="w-8 h-8 bg-white rounded-md"></div>
-              <div className="w-8 h-8 bg-white rounded-md"></div>
-              <div className="w-8 h-8 bg-white rounded-md"></div>
+              <motion.div 
+                className="w-8 h-8 bg-white rounded-md"
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 0.7, repeat: Infinity, repeatType: "reverse" }}
+              ></motion.div>
+              <motion.div 
+                className="w-8 h-8 bg-white rounded-md"
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 0.7, repeat: Infinity, repeatType: "reverse", delay: 0.2 }}
+              ></motion.div>
+              <motion.div 
+                className="w-8 h-8 bg-white rounded-md"
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 0.7, repeat: Infinity, repeatType: "reverse", delay: 0.4 }}
+              ></motion.div>
+              <motion.div 
+                className="w-8 h-8 bg-white rounded-md"
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 0.7, repeat: Infinity, repeatType: "reverse", delay: 0.6 }}
+              ></motion.div>
             </motion.div>
           ) : (
             <svg width="150" height="150" viewBox="0 0 150 150">
@@ -116,13 +132,24 @@ export const getDesignSystemItems = (): DesignSystemItem[] => {
             <>
               <motion.span
                 className="text-[#5d4037] text-8xl"
-                transition={{ type: "spring", stiffness: 300 }}
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ 
+                  duration: 2, 
+                  repeat: Infinity, 
+                  repeatType: "reverse" 
+                }}
               >
                 &ldquo;&ldquo;
               </motion.span>
               <motion.span
                 className="text-[#5d4037] text-8xl"
-                transition={{ type: "spring", stiffness: 300 }}
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ 
+                  duration: 2, 
+                  repeat: Infinity, 
+                  repeatType: "reverse",
+                  delay: 1 
+                }}
               >
                 &rdquo;&rdquo;
               </motion.span>
@@ -164,41 +191,16 @@ export const getDesignSystemItems = (): DesignSystemItem[] => {
       textColor: "#0061FF",
       content: (
         <div className="flex justify-center items-center h-full">
-          {hoveredItem === "logo" ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="relative w-14 h-14"
+          <div className="w-12 h-12 flex items-center justify-center">
+            <svg
+              viewBox="0 0 256 256"
+              xmlns="http://www.w3.org/2000/svg"
+              preserveAspectRatio="xMidYMid"
+              className="w-full h-full"
             >
-              <svg
-                viewBox="0 0 256 256"
-                xmlns="http://www.w3.org/2000/svg"
-                preserveAspectRatio="xMidYMid"
-                className="w-full h-full"
-              >
-                <path d="M63.246 0L0 41.625l43.766 35.22 64.764-39.812-45.284-37.033zm129.728 0L147.69 37.033l64.762 39.812 43.768-35.22L193.735 0h-.761zm-129.728 115.6L0 74.336l43.766-35.033 64.764 39.626-45.284 36.672zm129.728 0L147.69 73.93l64.762-39.626 43.768 35.032-63.52 41.264zm-65.202 42.627l-45.046-36.848-45.285 36.848 45.285 37.22 45.046-37.22z" fill="#0061FF" />
-              </svg>
-            </motion.div>
-          ) : (
-            <motion.div
-              className="w-12 h-12 flex items-center justify-center"
-              transition={{
-                type: "spring",
-                stiffness: 400,
-                damping: 30,
-                duration: 0.2
-              }}
-            >
-              <svg
-                viewBox="0 0 256 256"
-                xmlns="http://www.w3.org/2000/svg"
-                preserveAspectRatio="xMidYMid"
-                className="w-full h-full"
-              >
-                <path d="M63.246 0L0 41.625l43.766 35.22 64.764-39.812-45.284-37.033zm129.728 0L147.69 37.033l64.762 39.812 43.768-35.22L193.735 0h-.761zm-129.728 115.6L0 74.336l43.766-35.033 64.764 39.626-45.284 36.672zm129.728 0L147.69 73.93l64.762-39.626 43.768 35.032-63.52 41.264zm-65.202 42.627l-45.046-36.848-45.285 36.848 45.285 37.22 45.046-37.22z" fill="#0061FF" />
-              </svg>
-            </motion.div>
-          )}
+              <path d="M63.246 0L0 41.625l43.766 35.22 64.764-39.812-45.284-37.033zm129.728 0L147.69 37.033l64.762 39.812 43.768-35.22L193.735 0h-.761zm-129.728 115.6L0 74.336l43.766-35.033 64.764 39.626-45.284 36.672zm129.728 0L147.69 73.93l64.762-39.626 43.768 35.032-63.52 41.264zm-65.202 42.627l-45.046-36.848-45.285 36.848 45.285 37.22 45.046-37.22z" fill="#0061FF" />
+            </svg>
+          </div>
         </div>
       ),
       expandedContent: (
@@ -246,12 +248,28 @@ export const getDesignSystemItems = (): DesignSystemItem[] => {
               <TypeIcon size={64} className="text-white" />
             </motion.div>
           ) : (
-            <motion.span
-              className="text-[#ffffff] text-8xl font-serif"
-              transition={{ type: "spring", stiffness: 300 }}
-            >
-              Aa
-            </motion.span>
+            <motion.div className="flex flex-col items-center">
+              <motion.span
+                className="text-[#ffffff] text-8xl font-serif"
+                animate={{ y: [0, -5, 0] }}
+                transition={{ 
+                  duration: 3, 
+                  repeat: Infinity, 
+                  repeatType: "reverse" 
+                }}
+              >
+                Aa
+              </motion.span>
+              <motion.div 
+                className="h-1 bg-white w-10 mt-2 rounded-full"
+                animate={{ width: [40, 60, 40] }}
+                transition={{ 
+                  duration: 2.5, 
+                  repeat: Infinity, 
+                  repeatType: "reverse"
+                }}
+              />
+            </motion.div>
           )}
         </div>
       ),
@@ -292,16 +310,49 @@ export const getDesignSystemItems = (): DesignSystemItem[] => {
               <PaletteIcon size={64} className="text-white" />
             </motion.div>
           ) : (
-            <>
+            <motion.div className="relative w-full h-full flex items-center justify-center">
               <motion.div
-                className="absolute w-16 h-16 bg-[#6d3200] rounded"
-                transition={{ type: "spring", stiffness: 300 }}
+                className="absolute w-16 h-16 bg-[#FF5733] rounded-full opacity-70"
+                animate={{ 
+                  x: [0, 10, 0], 
+                  y: [0, -10, 0],
+                  scale: [1, 1.1, 1]
+                }}
+                transition={{ 
+                  duration: 3, 
+                  repeat: Infinity, 
+                  repeatType: "reverse" 
+                }}
               />
               <motion.div
-                className="absolute w-16 h-16 bg-[#6d3200] rounded-full"
-                transition={{ type: "spring", stiffness: 300 }}
+                className="absolute w-12 h-12 bg-[#33A8FF] rounded-full opacity-70"
+                animate={{ 
+                  x: [0, -10, 0], 
+                  y: [0, 10, 0],
+                  scale: [1, 1.2, 1]
+                }}
+                transition={{ 
+                  duration: 2.7, 
+                  repeat: Infinity, 
+                  repeatType: "reverse",
+                  delay: 0.3
+                }}
               />
-            </>
+              <motion.div
+                className="absolute w-10 h-10 bg-[#33FF57] rounded-full opacity-70"
+                animate={{ 
+                  x: [0, 15, 0], 
+                  y: [0, 5, 0],
+                  scale: [1, 1.15, 1]
+                }}
+                transition={{ 
+                  duration: 3.2, 
+                  repeat: Infinity, 
+                  repeatType: "reverse",
+                  delay: 0.6
+                }}
+              />
+            </motion.div>
           )}
         </div>
       ),
@@ -353,22 +404,28 @@ export const getDesignSystemItems = (): DesignSystemItem[] => {
       textColor: "#1A535C",
       content: (
         <div className="flex justify-center items-center h-full">
-          <motion.div
-            animate={{
-              rotate: hoveredItem === "iconography" ? 360 : 0,
-            }}
-            transition={{
-              type: "spring",
-              stiffness: 300,
-              rotate: { duration: 0.5 }
-            }}
-          >
-            {hoveredItem === "iconography" ? (
+          {hoveredItem === "iconography" ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1, rotate: 360 }}
+              transition={{ duration: 0.5 }}
+            >
               <UnlockIcon size={64} className="text-white" />
-            ) : (
+            </motion.div>
+          ) : (
+            <motion.div
+              animate={{
+                rotate: [0, 15, 0, -15, 0],
+              }}
+              transition={{
+                duration: 4,
+                repeat: Infinity,
+                repeatType: "loop"
+              }}
+            >
               <LockIcon size={64} className="text-[#1A535C]" />
-            )}
-          </motion.div>
+            </motion.div>
+          )}
         </div>
       ),
       expandedContent: (
@@ -426,11 +483,62 @@ export const getDesignSystemItems = (): DesignSystemItem[] => {
             </motion.div>
           ) : (
             <motion.div
-              className="w-32 h-32 bg-[#ffcccb] rounded-lg overflow-hidden relative"
-              transition={{ type: "spring", stiffness: 300 }}
+              className="w-32 h-32 rounded-lg overflow-hidden relative"
+              initial={{ borderRadius: "8px" }}
+              animate={{ 
+                borderRadius: ["8px", "16px", "8px", "24px", "8px"],
+                boxShadow: [
+                  "0 4px 8px rgba(0,0,0,0.1)", 
+                  "0 8px 16px rgba(0,0,0,0.2)", 
+                  "0 4px 8px rgba(0,0,0,0.1)"
+                ] 
+              }}
+              transition={{ 
+                duration: 8, 
+                repeat: Infinity, 
+                repeatType: "loop" 
+              }}
             >
-              <motion.div className="absolute top-1/4 left-1/4 w-4 h-4 bg-[#e84393] rounded-full" />
-              <motion.div className="absolute bottom-0 left-0 right-0 h-1/2 bg-[#e84393] rounded-t-[50px]" />
+              <motion.div 
+                className="absolute w-full h-1/2 bottom-0 bg-[#e84393] rounded-t-[50px]"
+                animate={{ 
+                  y: [0, -5, 0, -8, 0],
+                  borderTopLeftRadius: ["50px", "30px", "50px"],
+                  borderTopRightRadius: ["50px", "30px", "50px"] 
+                }}
+                transition={{ 
+                  duration: 5, 
+                  repeat: Infinity, 
+                  repeatType: "loop" 
+                }}
+              />
+              <motion.div 
+                className="absolute w-4 h-4 bg-[#e84393] rounded-full"
+                style={{ top: "25%", left: "25%" }}
+                animate={{ 
+                  x: [0, 10, 0, -10, 0],
+                  y: [0, -5, 0, 5, 0] 
+                }}
+                transition={{ 
+                  duration: 4, 
+                  repeat: Infinity, 
+                  repeatType: "loop" 
+                }}
+              />
+              <motion.div 
+                className="absolute w-6 h-6 bg-white rounded-full opacity-60"
+                style={{ top: "45%", right: "20%" }}
+                animate={{ 
+                  x: [0, -5, 0, 8, 0],
+                  y: [0, 8, 0, -5, 0] 
+                }}
+                transition={{ 
+                  duration: 3.5, 
+                  repeat: Infinity, 
+                  repeatType: "loop",
+                  delay: 0.5 
+                }}
+              />
             </motion.div>
           )}
         </div>
@@ -488,37 +596,51 @@ export const getDesignSystemItems = (): DesignSystemItem[] => {
               <RefreshCwIcon size={80} className="text-white" />
             </motion.div>
           ) : (
-            <svg width="150" height="150" viewBox="0 0 150 150">
-              <motion.path
-                d="M30,30 Q75,120 120,30 Q75,-60 30,30"
-                fill="transparent"
-                stroke="#5d4037"
-                strokeWidth="2"
-                initial={{ pathLength: 0 }}
+            <div className="relative w-32 h-32">
+              <motion.div
+                className="absolute w-8 h-8 rounded-full bg-[#5d4037]"
+                style={{ top: 0, left: 0 }}
                 animate={{
-                  pathLength: 0.6,
+                  x: [0, 60, 60, 0, 0],
+                  y: [0, 0, 60, 60, 0],
                 }}
-                transition={{ duration: 0.5 }}
+                transition={{
+                  duration: 6,
+                  repeat: Infinity,
+                  repeatType: "loop",
+                  ease: "easeInOut"
+                }}
               />
-              <motion.circle
-                cx="30"
-                cy="30"
-                r="8"
-                fill="#5d4037"
+              <motion.div
+                className="absolute w-6 h-6 rounded-full bg-[#5d4037] opacity-70"
+                style={{ bottom: 0, right: 0 }}
+                animate={{
+                  x: [0, -60, -60, 0, 0],
+                  y: [0, 0, -60, -60, 0],
+                }}
+                transition={{
+                  duration: 6,
+                  repeat: Infinity,
+                  repeatType: "loop",
+                  ease: "easeInOut",
+                  delay: 1.5
+                }}
               />
-              <motion.circle
-                cx="120"
-                cy="30"
-                r="8"
-                fill="#5d4037"
+              <motion.div
+                className="absolute w-4 h-4 rounded-full bg-[#5d4037] opacity-40"
+                style={{ top: "50%", left: "50%", marginLeft: "-8px", marginTop: "-8px" }}
+                animate={{
+                  scale: [1, 1.5, 1],
+                  opacity: [0.4, 0.7, 0.4]
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  repeatType: "loop",
+                  ease: "easeInOut"
+                }}
               />
-              <motion.circle
-                cx="75"
-                cy="120"
-                r="8"
-                fill="#5d4037"
-              />
-            </svg>
+            </div>
           )}
         </div>
       ),
@@ -573,13 +695,63 @@ export const getDesignSystemItems = (): DesignSystemItem[] => {
           ) : (
             <motion.div
               className="relative w-32 h-32 flex items-center justify-center"
-              transition={{ type: "spring", stiffness: 300 }}
             >
-              <div className="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center">
-                <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center">
-                  <div className="w-6 h-6 rounded-full bg-[#4361EE]"></div>
-                </div>
-              </div>
+              <motion.div 
+                className="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center"
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ 
+                  duration: 2, 
+                  repeat: Infinity, 
+                  repeatType: "reverse" 
+                }}
+              >
+                <motion.div 
+                  className="w-12 h-12 rounded-full bg-white flex items-center justify-center"
+                  animate={{ scale: [1, 0.95, 1] }}
+                  transition={{ 
+                    duration: 2, 
+                    repeat: Infinity, 
+                    repeatType: "reverse",
+                    delay: 0.5
+                  }}
+                >
+                  <motion.div 
+                    className="w-6 h-6 rounded-full bg-[#4361EE]"
+                    animate={{ scale: [1, 1.1, 1] }}
+                    transition={{ 
+                      duration: 2, 
+                      repeat: Infinity, 
+                      repeatType: "reverse",
+                      delay: 1
+                    }}
+                  ></motion.div>
+                </motion.div>
+              </motion.div>
+              <motion.div 
+                className="absolute w-full h-full rounded-full border border-white opacity-20"
+                animate={{ 
+                  scale: [1, 1.5], 
+                  opacity: [0.2, 0]
+                }}
+                transition={{ 
+                  duration: 2, 
+                  repeat: Infinity, 
+                  repeatType: "loop"
+                }}
+              />
+              <motion.div 
+                className="absolute w-full h-full rounded-full border border-white opacity-20"
+                animate={{ 
+                  scale: [1, 1.5], 
+                  opacity: [0.2, 0]
+                }}
+                transition={{ 
+                  duration: 2, 
+                  repeat: Infinity, 
+                  repeatType: "loop",
+                  delay: 0.7
+                }}
+              />
             </motion.div>
           )}
         </div>

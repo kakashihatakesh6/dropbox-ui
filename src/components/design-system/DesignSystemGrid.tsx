@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useRef } from "react"
+import React from "react"
 import { motion } from "framer-motion"
 import { DesignSystemItem } from "./DesignSystemItem"
 import { useDesignSystem } from "./useDesignSystem"
@@ -51,9 +51,9 @@ export function DesignSystemGrid({
   const getGridPosition = (itemId: string) => {
     switch (itemId) {
       case "framework":
-        return "col-start-1 col-end-2 row-start-1 row-end-3";
+        return "col-start-1 col-end-2 row-start-1 row-end-4";
       case "voice":
-        return "col-start-1 col-end-2 row-start-3 row-end-5";
+        return "col-start-1 col-end-2 row-start-4 row-end-5";
       case "typography":
         return "col-start-2 col-end-3 row-start-1 row-end-2";
       case "color":
@@ -65,9 +65,9 @@ export function DesignSystemGrid({
       case "imagery":
         return "col-start-3 col-end-4 row-start-4 row-end-5";
       case "motion":
-        return "col-start-4 col-end-5 row-start-1 row-end-3";
+        return "col-start-4 col-end-5 row-start-1 row-end-2";
       case "accessibility":
-        return "col-start-4 col-end-5 row-start-3 row-end-5";
+        return "col-start-4 col-end-5 row-start-2 row-end-5";
       default:
         return "";
     }
@@ -384,7 +384,7 @@ export function DesignSystemGrid({
             getBoxShadow={getBoxShadow}
             getLogoInitialPosition={getLogoInitialPosition}
             getPositionOffset={getPositionOffset}
-            onMouseEnter={() => setHoveredItem(item.id)}
+            onMouseEnter={item.id === "logo" ? () => {} : () => setHoveredItem(item.id)}
             onMouseLeave={handleMouseLeave}
             onClick={() => handleClick(item.id)}
             gridPosition={getGridPosition(item.id)}
