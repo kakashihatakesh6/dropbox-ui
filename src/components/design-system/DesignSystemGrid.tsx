@@ -55,19 +55,19 @@ export function DesignSystemGrid({
       case "voice":
         return "col-start-1 col-end-2 row-start-4 row-end-5";
       case "typography":
-        return "col-start-2 col-end-3 row-start-1 row-end-2";
+        return "col-start-2 col-end-4 row-start-1 row-end-2";
       case "color":
-        return "col-start-2 col-end-4 row-start-4 row-end-5";
+        return "col-start-3 col-end-4 row-start-4 row-end-5";
       case "leftBox":
-        return "col-start-2 col-end-3 row-start-2 row-end-4";
+        return "col-start-2 col-end-3 row-start-2 row-end-5";
       case "logo":
         return "col-start-3 col-end-4 row-start-2 row-end-4";
       case "accessibility":
-        return "col-start-4 col-end-5 row-start-2 row-end-5";
+        return "col-start-4 col-end-5 row-start-4 row-end-5";
       case "rightBox":
         return "col-start-5 col-end-6 row-start-2 row-end-4";
       case "iconography":
-        return "col-start-3 col-end-5 row-start-1 row-end-2";
+        return "col-start-4 col-end-5 row-start-1 row-end-4";
       case "imagery":
         return "col-start-5 col-end-6 row-start-4 row-end-5";
       case "motion":

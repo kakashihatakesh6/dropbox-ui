@@ -399,12 +399,17 @@ export function useDesignSystem({
 
   // Calculate position offset for moving items away from center
   const getPositionOffset = (item: string) => {
-    if (!centerItem || 
-        typeof scrollAmount[centerItem] !== 'number' || 
-        scrollAmount[centerItem] <= 0) return { x: 0, y: 0 };
+    if (!centerItem || !isExpanding) return { x: 0, y: 0 };
     
-    if (item === centerItem) return { x: 0, y: 0 };
-
+    // When the logo scroll amount is 0 or less, return no offset for the logo to prevent overlapping
+    if (item === "logo" && centerItem === "logo" && 
+        (typeof scrollAmount[centerItem] !== 'number' || scrollAmount[centerItem] <= 0)) {
+      return { x: 0, y: 0 };
+    }
+    
+    // Only apply offsets when scroll amount is greater than 0
+    const scrollFactor = scrollAmount[centerItem] ? scrollAmount[centerItem] / 100 : 0;
+    
     // Use a more stable movement pattern with minimal initial movement
     let moveOutFactor = 0;
 
