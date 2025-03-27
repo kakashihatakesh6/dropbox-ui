@@ -131,12 +131,28 @@ export function DesignSystemItem({
           scale: 1,
           zIndex: 30
         }),
+        ...(item.id === "logo" && centerItem === "logo" &&
+          typeof scrollAmount[centerItem] === 'number' && (scrollAmount[centerItem] === 0 || scrollAmount[centerItem] <= 0) && {
+          width: "auto",
+          height: "auto",
+          position: "relative",
+          top: "auto",
+          left: "auto",
+          x: 0,
+          y: 0,
+          zIndex: 25,
+        }),
         ...(isCenter && !isExpanded && centerItem &&
           typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] > 0 && {
           position: "relative",
           zIndex: 25,
           transformOrigin: "center center",
           scale: 1 + (scrollAmount[centerItem] / 100) * 0.2,
+        }),
+        ...(item.id !== "logo" && centerItem === "logo" && 
+          typeof scrollAmount[centerItem] === 'number' && scrollAmount[centerItem] === 100 && {
+          opacity: 0,
+          visibility: "hidden" as const
         }),
       }}
       transition={{

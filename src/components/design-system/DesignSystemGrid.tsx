@@ -55,19 +55,19 @@ export function DesignSystemGrid({
       case "voice":
         return "col-start-1 col-end-2 row-start-4 row-end-5";
       case "typography":
-        return "col-start-2 col-end-3 row-start-1 row-end-2";
+        return "col-start-2 col-end-4 row-start-1 row-end-2";
       case "color":
-        return "col-start-2 col-end-3 row-start-4 row-end-5";
+        return "col-start-5 col-end-6 row-start-2 row-end-5";
+      case "leftBox":
+        return "col-start-2 col-end-3 row-start-2 row-end-5";
       case "logo":
-        return "col-start-2 col-end-4 row-start-2 row-end-4";
+        return "col-start-3 col-end-4 row-start-2 row-end-4";
       case "iconography":
-        return "col-start-3 col-end-4 row-start-1 row-end-2";
+        return "col-start-4 col-end-5 row-start-1 row-end-4";
       case "imagery":
-        return "col-start-3 col-end-4 row-start-4 row-end-5";
+        return "col-start-3 col-end-5 row-start-4 row-end-5";
       case "motion":
-        return "col-start-4 col-end-5 row-start-1 row-end-2";
-      case "accessibility":
-        return "col-start-4 col-end-5 row-start-2 row-end-5";
+        return "col-start-5 col-end-6 row-start-1 row-end-2";
       default:
         return "";
     }
@@ -213,9 +213,10 @@ export function DesignSystemGrid({
             <line x1="0" y1="25" x2="100" y2="25" stroke="rgba(65,182,255,0.2)" strokeWidth="0.2" />
             <line x1="0" y1="50" x2="100" y2="50" stroke="rgba(65,182,255,0.25)" strokeWidth="0.3" />
             <line x1="0" y1="75" x2="100" y2="75" stroke="rgba(65,182,255,0.2)" strokeWidth="0.2" />
-            <line x1="25" y1="0" x2="25" y2="100" stroke="rgba(65,182,255,0.2)" strokeWidth="0.2" />
-            <line x1="50" y1="0" x2="50" y2="100" stroke="rgba(65,182,255,0.25)" strokeWidth="0.3" />
-            <line x1="75" y1="0" x2="75" y2="100" stroke="rgba(65,182,255,0.2)" strokeWidth="0.2" />
+            <line x1="20" y1="0" x2="20" y2="100" stroke="rgba(65,182,255,0.2)" strokeWidth="0.2" />
+            <line x1="40" y1="0" x2="40" y2="100" stroke="rgba(65,182,255,0.25)" strokeWidth="0.3" />
+            <line x1="60" y1="0" x2="60" y2="100" stroke="rgba(65,182,255,0.25)" strokeWidth="0.3" />
+            <line x1="80" y1="0" x2="80" y2="100" stroke="rgba(65,182,255,0.2)" strokeWidth="0.2" />
 
             {/* Diagonal grid lines */}
             <line x1="0" y1="0" x2="100" y2="100" stroke="rgba(65,182,255,0.2)" strokeWidth="0.2" />
@@ -245,10 +246,11 @@ export function DesignSystemGrid({
             "voice": ["color", "imagery"],
             "typography": ["framework", "iconography"],
             "color": ["voice", "imagery"],
-            "iconography": ["typography", "accessibility"],
-            "imagery": ["voice", "color"],
-            "motion": ["framework", "accessibility"],
-            "accessibility": ["motion", "iconography"]
+            "leftBox": ["logo", "typography"],
+            "logo": ["leftBox", "iconography"],
+            "iconography": ["typography", "logo", "imagery"],
+            "imagery": ["voice", "color", "iconography"],
+            "motion": ["framework"]
           };
           
           const currentConnections = connections[item.id as keyof typeof connections] || [];
@@ -361,13 +363,13 @@ export function DesignSystemGrid({
       )}
 
       <div
-        className={`grid grid-cols-4 grid-rows-4 h-full w-full max-h-screen max-w-screen p-8 relative`}
+        className={`grid grid-cols-5 grid-rows-4 h-full w-full max-h-screen max-w-screen p-8 relative`}
         style={{
           gap: '1.25rem', // Fixed gap size that doesn't change during expansion
           zIndex: 5 // Above the grid lines
         }}
       >
-        {items.map((item) => (
+        {items.filter(item => item.id !== "accessibility" && item.id !== "rightBox").map((item) => (
           <DesignSystemItem
             key={item.id}
             item={item}
@@ -386,7 +388,7 @@ export function DesignSystemGrid({
             getPositionOffset={getPositionOffset}
             onMouseEnter={item.id === "logo" ? () => {} : () => setHoveredItem(item.id)}
             onMouseLeave={handleMouseLeave}
-            onClick={() => handleClick(item.id)}
+            onClick={() => item.id === "logo" ? {} : handleClick(item.id)}
             gridPosition={getGridPosition(item.id)}
             scrollAmount={scrollAmount}
             entranceAnimation={entranceAnimation}

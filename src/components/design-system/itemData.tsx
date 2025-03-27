@@ -4,7 +4,20 @@
 
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { LockIcon, UnlockIcon, MoonIcon, PaletteIcon, TypeIcon, RefreshCwIcon } from "lucide-react"
+import { 
+  LayoutGridIcon, 
+  MicIcon, 
+  TypeIcon, 
+  PaletteIcon, 
+  ImageIcon, 
+  CircleIcon, 
+  ActivityIcon, 
+  MessageSquareIcon,
+  SquareIcon,
+  BoxIcon,
+  GridIcon,
+  ShapesIcon
+} from "lucide-react"
 import type { DesignSystemItem } from "./types"
 
 export const getDesignSystemItems = (): DesignSystemItem[] => {
@@ -17,7 +30,8 @@ export const getDesignSystemItems = (): DesignSystemItem[] => {
       bgColor: "#3A86FF",
       textColor: "white",
       content: (
-        <div className="h-full flex items-center justify-center">
+        <div className="h-full flex flex-col items-center justify-center gap-3">
+          <h3 className="text-lg font-semibold">Framework</h3>
           {hoveredItem === "framework" ? (
             <motion.div
               initial={{ opacity: 0, scale: 0.5 }}
@@ -51,37 +65,12 @@ export const getDesignSystemItems = (): DesignSystemItem[] => {
               ></motion.div>
             </motion.div>
           ) : (
-            <svg width="150" height="150" viewBox="0 0 150 150">
-              <motion.line
-                x1="30"
-                y1="30"
-                x2="75"
-                y2="75"
-                stroke="white"
-                strokeWidth="2"
-                initial={{ pathLength: 0 }}
-                animate={{
-                  pathLength: 0.6,
-                }}
-                transition={{ duration: 0.5 }}
-              />
-              <motion.line
-                x1="75"
-                y1="75"
-                x2="30"
-                y2="120"
-                stroke="white"
-                strokeWidth="2"
-                initial={{ pathLength: 0 }}
-                animate={{
-                  pathLength: 0.6,
-                }}
-                transition={{ duration: 0.5 }}
-              />
-              <motion.circle cx="30" cy="30" r="6" fill="white" />
-              <motion.circle cx="75" cy="75" r="6" fill="white" />
-              <motion.circle cx="30" cy="120" r="6" fill="white" />
-            </svg>
+            <motion.div 
+              whileHover={{ scale: 1.1 }}
+              className="flex items-center justify-center"
+            >
+              <LayoutGridIcon size={48} className="text-white" />
+            </motion.div>
           )}
         </div>
       ),
@@ -106,56 +95,38 @@ export const getDesignSystemItems = (): DesignSystemItem[] => {
       bgColor: "#FF9F1C",
       textColor: "#5d4037",
       content: (
-        <div className="flex justify-between items-center h-full">
+        <div className="h-full flex flex-col items-center justify-center gap-3">
+          <h3 className="text-lg font-semibold">Voice & Tone</h3>
           {hoveredItem === "voice" ? (
             <motion.div
-              className="flex flex-col items-center justify-center w-full space-y-2"
+              className="flex items-center justify-center w-full"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.3 }}
             >
-              <motion.div
-                className="h-1 bg-white w-3/4 rounded-full"
-                animate={{ width: ["20%", "80%", "60%"] }}
-                transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY, repeatType: "loop" }}
-              />
-              <motion.div
-                className="h-1 bg-white w-1/2 rounded-full"
-                animate={{ width: ["60%", "30%", "70%"] }}
-                transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY, repeatType: "loop", delay: 0.2 }}
-              />
-              <motion.div
-                className="h-1 bg-white w-2/3 rounded-full"
-                animate={{ width: ["40%", "90%", "50%"] }}
-                transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY, repeatType: "loop", delay: 0.4 }}
-              />
+              <motion.div 
+                className="relative"
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 0.8, repeat: Infinity }}
+              >
+                <MessageSquareIcon size={48} className="text-[#5d4037]" />
+                <motion.div
+                  className="absolute top-0 left-0 w-full h-full"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: [0, 1, 0] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                >
+                  <MicIcon size={48} className="text-[#5d4037]" />
+                </motion.div>
+              </motion.div>
             </motion.div>
           ) : (
-            <>
-              <motion.span
-                className="text-[#5d4037] text-8xl"
-                animate={{ scale: [1, 1.05, 1] }}
-                transition={{ 
-                  duration: 2, 
-                  repeat: Infinity, 
-                  repeatType: "reverse" 
-                }}
-              >
-                &ldquo;&ldquo;
-              </motion.span>
-              <motion.span
-                className="text-[#5d4037] text-8xl"
-                animate={{ scale: [1, 1.05, 1] }}
-                transition={{ 
-                  duration: 2, 
-                  repeat: Infinity, 
-                  repeatType: "reverse",
-                  delay: 1 
-                }}
-              >
-                &rdquo;&rdquo;
-              </motion.span>
-            </>
+            <motion.div 
+              whileHover={{ scale: 1.1 }}
+              className="flex items-center justify-center"
+            >
+              <MicIcon size={48} className="text-[#5d4037]" />
+            </motion.div>
           )}
         </div>
       ),
@@ -183,6 +154,37 @@ export const getDesignSystemItems = (): DesignSystemItem[] => {
               </ul>
             </div>
           </div>
+        </>
+      ),
+    },
+    {
+      id: "leftBox",
+      title: "Services",
+      bgColor: "#8338EC",
+      textColor: "white",
+      content: (
+        <div className="h-full flex flex-col items-center justify-center gap-3">
+          <h3 className="text-lg font-semibold">Services</h3>
+          <motion.div 
+            whileHover={{ scale: 1.1 }}
+            className="flex items-center justify-center"
+          >
+            <ShapesIcon size={48} className="text-white" />
+          </motion.div>
+        </div>
+      ),
+      expandedContent: (
+        <>
+          <h3 className="text-xl font-semibold mb-2">Our Services</h3>
+          <p className="mb-4">
+            Comprehensive solutions to meet all your business needs.
+          </p>
+          <ul className="list-disc pl-5 space-y-2">
+            <li>Product Development</li>
+            <li>UX/UI Design</li>
+            <li>Cloud Infrastructure</li>
+            <li>Consulting Services</li>
+          </ul>
         </>
       ),
     },
@@ -237,60 +239,61 @@ export const getDesignSystemItems = (): DesignSystemItem[] => {
     {
       id: "typography",
       title: "Typography",
-      bgColor: "#FB5607",
-      textColor: "#ffffff",
+      bgColor: "#3F8EFC",
+      textColor: "white",
       content: (
-        <div className="flex justify-center items-center h-full">
+        <div className="h-full flex flex-col items-center justify-center gap-3">
+          <h3 className="text-lg font-semibold">Typography</h3>
           {hoveredItem === "typography" ? (
             <motion.div
-              initial={{ opacity: 0, rotate: -90 }}
-              animate={{ opacity: 1, rotate: 0 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               transition={{ duration: 0.3 }}
+              className="flex flex-col items-center gap-2"
             >
-              <TypeIcon size={64} className="text-white" />
-            </motion.div>
-          ) : (
-            <motion.div className="flex flex-col items-center">
-              <motion.span
-                className="text-[#ffffff] text-8xl font-serif"
+              <motion.div 
+                className="font-bold text-3xl" 
                 animate={{ y: [0, -5, 0] }}
-                transition={{ 
-                  duration: 3, 
-                  repeat: Infinity, 
-                  repeatType: "reverse" 
-                }}
+                transition={{ duration: 1, repeat: Infinity }}
               >
                 Aa
-              </motion.span>
+              </motion.div>
               <motion.div 
-                className="h-1 bg-white w-10 mt-2 rounded-full"
-                animate={{ width: [40, 60, 40] }}
-                transition={{ 
-                  duration: 2.5, 
-                  repeat: Infinity, 
-                  repeatType: "reverse"
-                }}
-              />
+                className="text-sm font-light"
+                animate={{ y: [0, 5, 0] }}
+                transition={{ duration: 1, repeat: Infinity, delay: 0.2 }}
+              >
+                Helvetica
+              </motion.div>
+            </motion.div>
+          ) : (
+            <motion.div 
+              whileHover={{ scale: 1.1 }}
+              className="flex items-center justify-center"
+            >
+              <TypeIcon size={48} className="text-white" />
             </motion.div>
           )}
         </div>
       ),
       expandedContent: (
         <>
-          <h3 className="text-xl font-semibold mb-2">Type System</h3>
-          <p className="mb-4">The font families, sizes, and styles that create hierarchy and enhance readability.</p>
-          <div className="space-y-3">
-            <div className="font-sans">
-              <span className="text-xs opacity-70">Primary Font</span>
-              <div className="text-2xl">Inter / Sans-Serif</div>
+          <h3 className="text-xl font-semibold mb-2">Typography System</h3>
+          <p className="mb-4">Our typographic hierarchy ensures readability and brand consistency across all touchpoints.</p>
+          <div className="space-y-4">
+            <div>
+              <h4 className="font-medium">Primary Typeface: Helvetica Neue</h4>
+              <p className="text-sm">Used for headings, buttons, and key UI elements</p>
+              <div className="mt-2">
+                <p className="text-2xl font-bold">Heading</p>
+                <p className="text-lg font-medium">Subheading</p>
+                <p className="text-base">Body text</p>
+                <p className="text-sm">Small text / Caption</p>
+              </div>
             </div>
-            <div className="font-serif">
-              <span className="text-xs opacity-70">Secondary Font</span>
-              <div className="text-2xl">Merriweather / Serif</div>
-            </div>
-            <div className="font-mono">
-              <span className="text-xs opacity-70">Monospace</span>
-              <div className="text-2xl">Roboto Mono</div>
+            <div>
+              <h4 className="font-medium">Secondary Typeface: Georgia</h4>
+              <p className="text-sm italic font-serif">Used for longform content and special applications</p>
             </div>
           </div>
         </>
@@ -299,61 +302,46 @@ export const getDesignSystemItems = (): DesignSystemItem[] => {
     {
       id: "color",
       title: "Color",
-      bgColor: "#8338EC",
+      bgColor: "#FB5607",
       textColor: "white",
       content: (
-        <div className="flex justify-center items-center h-full relative">
+        <div className="h-full flex flex-col items-center justify-center gap-3">
+          <h3 className="text-lg font-semibold">Color</h3>
           {hoveredItem === "color" ? (
             <motion.div
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={{ opacity: 1, scale: 1, rotate: [0, 10, -10, 10, 0] }}
-              transition={{ duration: 0.6 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+              className="flex items-center gap-2"
             >
-              <PaletteIcon size={64} className="text-white" />
+              <motion.div
+                className="w-10 h-10 rounded-full bg-blue-500"
+                animate={{ 
+                  backgroundColor: ["#3B82F6", "#EF4444", "#10B981", "#F59E0B", "#3B82F6"] 
+                }}
+                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+              />
+              <motion.div
+                className="w-10 h-10 rounded-full bg-red-500"
+                animate={{ 
+                  backgroundColor: ["#EF4444", "#10B981", "#F59E0B", "#3B82F6", "#EF4444"] 
+                }}
+                transition={{ duration: 3, repeat: Infinity, ease: "linear", delay: 0.5 }}
+              />
+              <motion.div
+                className="w-10 h-10 rounded-full bg-green-500"
+                animate={{ 
+                  backgroundColor: ["#10B981", "#F59E0B", "#3B82F6", "#EF4444", "#10B981"] 
+                }}
+                transition={{ duration: 3, repeat: Infinity, ease: "linear", delay: 1 }}
+              />
             </motion.div>
           ) : (
-            <motion.div className="relative w-full h-full flex items-center justify-center">
-              <motion.div
-                className="absolute w-16 h-16 bg-[#FF5733] rounded-full opacity-70"
-                animate={{ 
-                  x: [0, 10, 0], 
-                  y: [0, -10, 0],
-                  scale: [1, 1.1, 1]
-                }}
-                transition={{ 
-                  duration: 3, 
-                  repeat: Infinity, 
-                  repeatType: "reverse" 
-                }}
-              />
-              <motion.div
-                className="absolute w-12 h-12 bg-[#33A8FF] rounded-full opacity-70"
-                animate={{ 
-                  x: [0, -10, 0], 
-                  y: [0, 10, 0],
-                  scale: [1, 1.2, 1]
-                }}
-                transition={{ 
-                  duration: 2.7, 
-                  repeat: Infinity, 
-                  repeatType: "reverse",
-                  delay: 0.3
-                }}
-              />
-              <motion.div
-                className="absolute w-10 h-10 bg-[#33FF57] rounded-full opacity-70"
-                animate={{ 
-                  x: [0, 15, 0], 
-                  y: [0, 5, 0],
-                  scale: [1, 1.15, 1]
-                }}
-                transition={{ 
-                  duration: 3.2, 
-                  repeat: Infinity, 
-                  repeatType: "reverse",
-                  delay: 0.6
-                }}
-              />
+            <motion.div 
+              whileHover={{ scale: 1.1 }}
+              className="flex items-center justify-center"
+            >
+              <PaletteIcon size={48} className="text-white" />
             </motion.div>
           )}
         </div>
@@ -361,39 +349,23 @@ export const getDesignSystemItems = (): DesignSystemItem[] => {
       expandedContent: (
         <>
           <h3 className="text-xl font-semibold mb-2">Color Palette</h3>
-          <p className="mb-4">Our palette that evokes emotion, creates hierarchy, and reinforces brand recognition.</p>
-          <div className="grid grid-cols-4 gap-2">
-            <div className="space-y-2">
-              <div className="w-full h-10 bg-[#2c3e50] rounded"></div>
-              <div className="text-xs">Navy</div>
+          <p className="mb-4">Our color system expresses our brand personality and improves usability through appropriate contrast.</p>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <h4 className="font-medium">Primary Colors</h4>
+              <div className="flex gap-2 mt-2">
+                <div className="w-10 h-10 rounded-md bg-[#0061FF]"></div>
+                <div className="w-10 h-10 rounded-md bg-[#FF5154]"></div>
+                <div className="w-10 h-10 rounded-md bg-[#FFB54C]"></div>
+              </div>
             </div>
-            <div className="space-y-2">
-              <div className="w-full h-10 bg-[#f1c40f] rounded"></div>
-              <div className="text-xs">Yellow</div>
-            </div>
-            <div className="space-y-2">
-              <div className="w-full h-10 bg-[#48dbfb] rounded"></div>
-              <div className="text-xs">Cyan</div>
-            </div>
-            <div className="space-y-2">
-              <div className="w-full h-10 bg-[#ff7f50] rounded"></div>
-              <div className="text-xs">Coral</div>
-            </div>
-            <div className="space-y-2">
-              <div className="w-full h-10 bg-[#ff9f43] rounded"></div>
-              <div className="text-xs">Orange</div>
-            </div>
-            <div className="space-y-2">
-              <div className="w-full h-10 bg-[#b8e994] rounded"></div>
-              <div className="text-xs">Green</div>
-            </div>
-            <div className="space-y-2">
-              <div className="w-full h-10 bg-[#8e44ad] rounded"></div>
-              <div className="text-xs">Purple</div>
-            </div>
-            <div className="space-y-2">
-              <div className="w-full h-10 bg-[#d8b5ff] rounded"></div>
-              <div className="text-xs">Lavender</div>
+            <div>
+              <h4 className="font-medium">Secondary Colors</h4>
+              <div className="flex gap-2 mt-2">
+                <div className="w-10 h-10 rounded-md bg-[#14B8A6]"></div>
+                <div className="w-10 h-10 rounded-md bg-[#8B5CF6]"></div>
+                <div className="w-10 h-10 rounded-md bg-[#F43F5E]"></div>
+              </div>
             </div>
           </div>
         </>
@@ -402,30 +374,43 @@ export const getDesignSystemItems = (): DesignSystemItem[] => {
     {
       id: "iconography",
       title: "Iconography",
-      bgColor: "#06D6A0",
-      textColor: "#1A535C",
+      bgColor: "#4CC9F0",
+      textColor: "white",
       content: (
-        <div className="flex justify-center items-center h-full">
+        <div className="h-full flex flex-col items-center justify-center gap-3">
+          <h3 className="text-lg font-semibold">Iconography</h3>
           {hoveredItem === "iconography" ? (
             <motion.div
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={{ opacity: 1, scale: 1, rotate: 360 }}
-              transition={{ duration: 0.5 }}
+              className="flex items-center gap-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.2 }}
             >
-              <UnlockIcon size={64} className="text-white" />
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+              >
+                <ShapesIcon size={32} className="text-white" />
+              </motion.div>
+              <motion.div
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              >
+                <BoxIcon size={32} className="text-white" />
+              </motion.div>
+              <motion.div
+                animate={{ rotate: [0, 15, -15, 0] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                <GridIcon size={32} className="text-white" />
+              </motion.div>
             </motion.div>
           ) : (
-            <motion.div
-              animate={{
-                rotate: [0, 15, 0, -15, 0],
-              }}
-              transition={{
-                duration: 4,
-                repeat: Infinity,
-                repeatType: "loop"
-              }}
+            <motion.div 
+              whileHover={{ scale: 1.1 }}
+              className="flex items-center justify-center"
             >
-              <LockIcon size={64} className="text-[#1A535C]" />
+              <CircleIcon size={48} className="text-white" />
             </motion.div>
           )}
         </div>
@@ -433,35 +418,29 @@ export const getDesignSystemItems = (): DesignSystemItem[] => {
       expandedContent: (
         <>
           <h3 className="text-xl font-semibold mb-2">Icon System</h3>
-          <p className="mb-4">Visual symbols that communicate meaning efficiently and enhance user experience.</p>
+          <p className="mb-4">Consistent visual language through icons that aid navigation and comprehension.</p>
           <div className="space-y-4">
             <div>
-              <h4 className="font-medium">Icon Guidelines:</h4>
-              <ul className="list-disc pl-5">
-                <li>Consistent stroke weight</li>
-                <li>Simple, recognizable shapes</li>
-                <li>Align to pixel grid</li>
-                <li>Maintain visual harmony</li>
+              <h4 className="font-medium">Icon Style Guidelines</h4>
+              <ul className="list-disc pl-5 mt-2">
+                <li>2px stroke weight</li>
+                <li>Rounded corners (2px radius)</li>
+                <li>Consistent padding within bounding box</li>
+                <li>Simplicity over detail</li>
               </ul>
             </div>
-            <div className="flex gap-4 justify-around">
-              <div className="flex flex-col items-center">
-                <div className="w-10 h-10 rounded-full bg-[#1A535C] flex items-center justify-center">
-                  <LockIcon size={20} className="text-white" />
-                </div>
-                <span className="text-xs mt-1">Filled</span>
+            <div className="grid grid-cols-4 gap-4 mt-4">
+              <div className="w-12 h-12 flex items-center justify-center bg-white bg-opacity-10 rounded-md">
+                <CircleIcon size={24} className="text-white" />
               </div>
-              <div className="flex flex-col items-center">
-                <div className="w-10 h-10 rounded-full bg-white border-2 border-[#1A535C] flex items-center justify-center">
-                  <LockIcon size={20} className="text-[#1A535C]" />
-                </div>
-                <span className="text-xs mt-1">Outlined</span>
+              <div className="w-12 h-12 flex items-center justify-center bg-white bg-opacity-10 rounded-md">
+                <BoxIcon size={24} className="text-white" />
               </div>
-              <div className="flex flex-col items-center">
-                <div className="w-10 h-10 rounded-full bg-[#1A535C] bg-opacity-20 flex items-center justify-center">
-                  <LockIcon size={20} className="text-[#1A535C]" />
-                </div>
-                <span className="text-xs mt-1">Duotone</span>
+              <div className="w-12 h-12 flex items-center justify-center bg-white bg-opacity-10 rounded-md">
+                <GridIcon size={24} className="text-white" />
+              </div>
+              <div className="w-12 h-12 flex items-center justify-center bg-white bg-opacity-10 rounded-md">
+                <ShapesIcon size={24} className="text-white" />
               </div>
             </div>
           </div>
@@ -471,103 +450,64 @@ export const getDesignSystemItems = (): DesignSystemItem[] => {
     {
       id: "imagery",
       title: "Imagery",
-      bgColor: "#FF006E",
+      bgColor: "#06D6A0",
       textColor: "white",
       content: (
-        <div className="flex justify-center items-center h-full">
+        <div className="h-full flex flex-col items-center justify-center gap-3">
+          <h3 className="text-lg font-semibold">Imagery</h3>
           {hoveredItem === "imagery" ? (
             <motion.div
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={{ opacity: 1, scale: 1 }}
+              className="relative w-12 h-12"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               transition={{ duration: 0.3 }}
             >
-              <MoonIcon size={80} className="text-white" />
+              <motion.div 
+                className="absolute inset-0 flex items-center justify-center"
+                animate={{ opacity: [1, 0, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                <SquareIcon size={48} className="text-white" />
+              </motion.div>
+              <motion.div 
+                className="absolute inset-0 flex items-center justify-center"
+                animate={{ opacity: [0, 1, 0] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                <ImageIcon size={48} className="text-white" />
+              </motion.div>
             </motion.div>
           ) : (
-            <motion.div
-              className="w-32 h-32 rounded-lg overflow-hidden relative"
-              initial={{ borderRadius: "8px" }}
-              animate={{ 
-                borderRadius: ["8px", "16px", "8px", "24px", "8px"],
-                boxShadow: [
-                  "0 4px 8px rgba(0,0,0,0.1)", 
-                  "0 8px 16px rgba(0,0,0,0.2)", 
-                  "0 4px 8px rgba(0,0,0,0.1)"
-                ] 
-              }}
-              transition={{ 
-                duration: 8, 
-                repeat: Infinity, 
-                repeatType: "loop" 
-              }}
+            <motion.div 
+              whileHover={{ scale: 1.1 }}
+              className="flex items-center justify-center"
             >
-              <motion.div 
-                className="absolute w-full h-1/2 bottom-0 bg-[#e84393] rounded-t-[50px]"
-                animate={{ 
-                  y: [0, -5, 0, -8, 0],
-                  borderTopLeftRadius: ["50px", "30px", "50px"],
-                  borderTopRightRadius: ["50px", "30px", "50px"] 
-                }}
-                transition={{ 
-                  duration: 5, 
-                  repeat: Infinity, 
-                  repeatType: "loop" 
-                }}
-              />
-              <motion.div 
-                className="absolute w-4 h-4 bg-[#e84393] rounded-full"
-                style={{ top: "25%", left: "25%" }}
-                animate={{ 
-                  x: [0, 10, 0, -10, 0],
-                  y: [0, -5, 0, 5, 0] 
-                }}
-                transition={{ 
-                  duration: 4, 
-                  repeat: Infinity, 
-                  repeatType: "loop" 
-                }}
-              />
-              <motion.div 
-                className="absolute w-6 h-6 bg-white rounded-full opacity-60"
-                style={{ top: "45%", right: "20%" }}
-                animate={{ 
-                  x: [0, -5, 0, 8, 0],
-                  y: [0, 8, 0, -5, 0] 
-                }}
-                transition={{ 
-                  duration: 3.5, 
-                  repeat: Infinity, 
-                  repeatType: "loop",
-                  delay: 0.5 
-                }}
-              />
+              <ImageIcon size={48} className="text-white" />
             </motion.div>
           )}
         </div>
       ),
       expandedContent: (
         <>
-          <h3 className="text-xl font-semibold mb-2">Visual Language</h3>
-          <p className="mb-4">
-            Photography and illustrations that tell our story and connect emotionally with our audience.
-          </p>
-          <div className="grid grid-cols-2 gap-4">
+          <h3 className="text-xl font-semibold mb-2">Photography & Illustration</h3>
+          <p className="mb-4">Visual assets that reinforce our brand story and create emotional connection.</p>
+          <div className="space-y-4">
             <div>
-              <h4 className="font-medium">Photography Style:</h4>
-              <ul className="list-disc pl-5">
+              <h4 className="font-medium">Photography Style</h4>
+              <ul className="list-disc pl-5 mt-2">
                 <li>Natural lighting</li>
                 <li>Authentic moments</li>
-                <li>Diverse representation</li>
-                <li>Vibrant but not oversaturated</li>
+                <li>Rich color treatment</li>
+                <li>People-focused</li>
               </ul>
             </div>
             <div>
-              <h4 className="font-medium">Illustration Style:</h4>
-              <ul className="list-disc pl-5">
+              <h4 className="font-medium">Illustration Style</h4>
+              <ul className="list-disc pl-5 mt-2">
                 <li>Geometric shapes</li>
-                <li>Bold color blocking</li>
-                <li>Minimal details</li>
-                <li>Consistent line weights</li>
+                <li>Limited color palette</li>
+                <li>Conceptual approach</li>
+                <li>Consistency with brand</li>
               </ul>
             </div>
           </div>
@@ -577,210 +517,61 @@ export const getDesignSystemItems = (): DesignSystemItem[] => {
     {
       id: "motion",
       title: "Motion",
-      bgColor: "#FFBE0B",
-      textColor: "#5d4037",
+      bgColor: "#7209B7", 
+      textColor: "white",
       content: (
-        <div className="flex justify-center items-center h-full">
+        <div className="h-full flex flex-col items-center justify-center gap-3">
+          <h3 className="text-lg font-semibold">Motion</h3>
           {hoveredItem === "motion" ? (
             <motion.div
               initial={{ opacity: 0 }}
-              animate={{
-                opacity: 1,
-                rotate: 360,
-              }}
-              transition={{
-                duration: 1.5,
-                repeat: Number.POSITIVE_INFINITY,
-                repeatType: "loop",
-                ease: "linear"
-              }}
-            >
-              <RefreshCwIcon size={80} className="text-white" />
-            </motion.div>
-          ) : (
-            <div className="relative w-32 h-32">
-              <motion.div
-                className="absolute w-8 h-8 rounded-full bg-[#5d4037]"
-                style={{ top: 0, left: 0 }}
-                animate={{
-                  x: [0, 60, 60, 0, 0],
-                  y: [0, 0, 60, 60, 0],
-                }}
-                transition={{
-                  duration: 6,
-                  repeat: Infinity,
-                  repeatType: "loop",
-                  ease: "easeInOut"
-                }}
-              />
-              <motion.div
-                className="absolute w-6 h-6 rounded-full bg-[#5d4037] opacity-70"
-                style={{ bottom: 0, right: 0 }}
-                animate={{
-                  x: [0, -60, -60, 0, 0],
-                  y: [0, 0, -60, -60, 0],
-                }}
-                transition={{
-                  duration: 6,
-                  repeat: Infinity,
-                  repeatType: "loop",
-                  ease: "easeInOut",
-                  delay: 1.5
-                }}
-              />
-              <motion.div
-                className="absolute w-4 h-4 rounded-full bg-[#5d4037] opacity-40"
-                style={{ top: "50%", left: "50%", marginLeft: "-8px", marginTop: "-8px" }}
-                animate={{
-                  scale: [1, 1.5, 1],
-                  opacity: [0.4, 0.7, 0.4]
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  repeatType: "loop",
-                  ease: "easeInOut"
-                }}
-              />
-            </div>
-          )}
-        </div>
-      ),
-      expandedContent: (
-        <>
-          <h3 className="text-xl font-semibold mb-2">Animation Principles</h3>
-          <p className="mb-4">How our elements move and transition to create engaging, intuitive user experiences.</p>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <h4 className="font-medium">Motion Principles:</h4>
-                <ul className="list-disc pl-5">
-                  <li>Natural and fluid</li>
-                  <li>Purposeful, not decorative</li>
-                  <li>Consistent timing and easing</li>
-                  <li>Responsive to user input</li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-medium">Timing Guidelines:</h4>
-                <ul className="list-disc pl-5">
-                  <li>Quick: 150-200ms</li>
-                  <li>Standard: 250-300ms</li>
-                  <li>Emphasis: 400-500ms</li>
-                  <li>Complex: 500-800ms</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </>
-      ),
-    },
-    {
-      id: "accessibility",
-      title: "Accessibility",
-      bgColor: "#4361EE",
-      textColor: "white",
-      content: (
-        <div className="flex justify-center items-center h-full">
-          {hoveredItem === "accessibility" ? (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={{ opacity: 1, scale: 1 }}
+              animate={{ opacity: 1 }}
               transition={{ duration: 0.3 }}
             >
-              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10" />
-                <path d="M12 8v8" />
-                <path d="M8 12h8" />
-              </svg>
-            </motion.div>
-          ) : (
-            <motion.div
-              className="relative w-32 h-32 flex items-center justify-center"
-            >
-              <motion.div 
-                className="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center"
-                animate={{ scale: [1, 1.05, 1] }}
+              <motion.div
+                animate={{ 
+                  rotate: 360,
+                  scale: [1, 1.2, 1]
+                }}
                 transition={{ 
-                  duration: 2, 
-                  repeat: Infinity, 
-                  repeatType: "reverse" 
+                  rotate: { duration: 3, repeat: Infinity, ease: "linear" },
+                  scale: { duration: 1.5, repeat: Infinity, ease: "easeInOut" }
                 }}
               >
-                <motion.div 
-                  className="w-12 h-12 rounded-full bg-white flex items-center justify-center"
-                  animate={{ scale: [1, 0.95, 1] }}
-                  transition={{ 
-                    duration: 2, 
-                    repeat: Infinity, 
-                    repeatType: "reverse",
-                    delay: 0.5
-                  }}
-                >
-                  <motion.div 
-                    className="w-6 h-6 rounded-full bg-[#4361EE]"
-                    animate={{ scale: [1, 1.1, 1] }}
-                    transition={{ 
-                      duration: 2, 
-                      repeat: Infinity, 
-                      repeatType: "reverse",
-                      delay: 1
-                    }}
-                  ></motion.div>
-                </motion.div>
+                <ActivityIcon size={48} className="text-white" />
               </motion.div>
-              <motion.div 
-                className="absolute w-full h-full rounded-full border border-white opacity-20"
-                animate={{ 
-                  scale: [1, 1.5], 
-                  opacity: [0.2, 0]
-                }}
-                transition={{ 
-                  duration: 2, 
-                  repeat: Infinity, 
-                  repeatType: "loop"
-                }}
-              />
-              <motion.div 
-                className="absolute w-full h-full rounded-full border border-white opacity-20"
-                animate={{ 
-                  scale: [1, 1.5], 
-                  opacity: [0.2, 0]
-                }}
-                transition={{ 
-                  duration: 2, 
-                  repeat: Infinity, 
-                  repeatType: "loop",
-                  delay: 0.7
-                }}
-              />
+            </motion.div>
+          ) : (
+            <motion.div 
+              whileHover={{ scale: 1.1 }}
+              className="flex items-center justify-center"
+            >
+              <ActivityIcon size={48} className="text-white" />
             </motion.div>
           )}
         </div>
       ),
       expandedContent: (
         <>
-          <h3 className="text-xl font-semibold mb-2">Inclusive Design</h3>
-          <p className="mb-4">
-            Design principles and practices that ensure our products are accessible to users of all abilities.
-          </p>
-          <div className="grid grid-cols-2 gap-4">
+          <h3 className="text-xl font-semibold mb-2">Motion Design</h3>
+          <p className="mb-4">Animation principles that bring our interfaces to life and guide users through experiences.</p>
+          <div className="space-y-4">
             <div>
-              <h4 className="font-medium">Accessibility Standards:</h4>
-              <ul className="list-disc pl-5">
-                <li>WCAG 2.1 AA compliance</li>
-                <li>Keyboard navigation support</li>
-                <li>Screen reader compatibility</li>
-                <li>Sufficient color contrast</li>
+              <h4 className="font-medium">Animation Principles</h4>
+              <ul className="list-disc pl-5 mt-2">
+                <li>Purposeful movement</li>
+                <li>Natural physics</li>
+                <li>Appropriate timing</li>
+                <li>Contextual feedback</li>
               </ul>
             </div>
             <div>
-              <h4 className="font-medium">Design Considerations:</h4>
-              <ul className="list-disc pl-5">
-                <li>Text resizing without loss of functionality</li>
-                <li>Alternative text for images</li>
-                <li>Focus indicators for interactive elements</li>
-                <li>Multiple ways to access content</li>
+              <h4 className="font-medium">Transition Types</h4>
+              <ul className="list-disc pl-5 mt-2">
+                <li>Page transitions: 300-500ms</li>
+                <li>Micro-interactions: 150-250ms</li>
+                <li>Loading states: looping</li>
+                <li>Hover effects: 150ms</li>
               </ul>
             </div>
           </div>
